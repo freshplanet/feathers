@@ -20,7 +20,7 @@ package feathers.system
 		 * The minimum physical size, in inches, of the device's larger side to
 		 * be considered a tablet.
 		 */
-		public static var tabletScreenMinimumInches:Number = 5;
+		public static var tabletScreenMinimumInches:Number = 6.5;
 
 		/**
 		 * A custom width, in pixels, to use for calculations of the device's
