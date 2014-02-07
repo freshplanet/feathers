@@ -7,6 +7,8 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.text
 {
+	import com.freshplanet.popsdk.Pop;
+	
 	import feathers.core.FeathersControl;
 	import feathers.core.ITextEditor;
 	import feathers.events.FeathersEventType;
@@ -38,6 +40,8 @@ package feathers.controls.text
 	import starling.textures.ConcreteTexture;
 	import starling.textures.Texture;
 	import starling.utils.MatrixUtil;
+	
+	import com.freshplanet.apps.hellopop.ui.assets.Assets;
 
 	/**
 	 * Dispatched when the text property changes.
@@ -203,6 +207,10 @@ package feathers.controls.text
 		 */
 		protected var _measureTextField:TextField;
 
+		public function get measureTextField():TextField
+		{
+			return this._measureTextField;
+		}
 		/**
 		 * @private
 		 */
@@ -739,11 +747,6 @@ package feathers.controls.text
 				this.textSnapshot.y = Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
 			}
 
-			//theoretically, this will ensure that the StageText is set visible
-			//or invisible immediately after the snapshot changes visibility in
-			//the rendered graphics. the OS might take longer to do the change,
-			//though.
-			this.stageText.visible = this.textSnapshot ? !this.textSnapshot.visible : this._stageTextHasFocus;
 			super.render(support, parentAlpha);
 		}
 
@@ -806,6 +809,7 @@ package feathers.controls.text
 				{
 					this._pendingSelectionStartIndex = this._pendingSelectionEndIndex = -1;
 				}
+				this.stageText.visible = true;
 				this.stageText.assignFocus();
 			}
 			else
@@ -1000,7 +1004,12 @@ package feathers.controls.text
 				}
 				if(this.textSnapshot)
 				{
-					this.textSnapshot.visible = hasText;
+					this.textSnapshot.visible = !this._stageTextHasFocus;
+					this.textSnapshot.alpha = hasText ? 1 : 0;
+					if(!this._stageTextHasFocus)
+					{
+						this.stageText.visible = false;
+					}
 				}
 			}
 
@@ -1126,6 +1135,15 @@ package feathers.controls.text
 		protected function texture_onRestore():void
 		{
 			this.refreshSnapshot();
+			if(this.textSnapshot)
+			{
+				this.textSnapshot.visible = !this._stageTextHasFocus;
+				this.textSnapshot.alpha = this._text.length > 0 ? 1 : 0;
+				if(!this._stageTextHasFocus)
+				{
+					this.stageText.visible = false;
+				}
+			}
 		}
 
 		/**
@@ -1181,7 +1199,6 @@ package feathers.controls.text
 			this.textSnapshot.scaleX = 1 / matrixToScaleX(HELPER_MATRIX);
 			this.textSnapshot.scaleY = 1 / matrixToScaleY(HELPER_MATRIX);
 			bitmapData.dispose();
-			this.textSnapshot.visible = !this._stageTextHasFocus;
 			this._needsNewTexture = false;
 		}
 

@@ -8,6 +8,7 @@ accordance with the terms of the accompanying license agreement.
 package feathers.core
 {
 	import flash.geom.Point;
+	import flash.text.TextField;
 
 	/**
 	 * Dispatched when the text property changes.
@@ -144,5 +145,7 @@ package feathers.core
 		 * possible).
 		 */
 		function measureText(result:Point = null):Point;
+		
+		function get measureTextField():TextField;
 	}
 }
