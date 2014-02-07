@@ -3049,7 +3049,7 @@ package feathers.controls
 			}
 			else if(this._label && !this.currentIcon)
 			{
-				this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight;
+				this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight - this._labelOffsetX;
 			}
 		}
 		
