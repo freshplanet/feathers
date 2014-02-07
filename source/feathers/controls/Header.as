@@ -309,6 +309,8 @@ package feathers.controls
 		 */
 		public function get leftItems():Vector.<DisplayObject>
 		{
+			if ( this._leftItems == null ) return null;
+			
 			return this._leftItems.concat();
 		}
 
@@ -368,6 +370,8 @@ package feathers.controls
 		 */
 		public function get rightItems():Vector.<DisplayObject>
 		{
+			if ( this._rightItems == null ) return null;
+			
 			return this._rightItems.concat();
 		}
 
