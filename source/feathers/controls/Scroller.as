@@ -253,12 +253,13 @@ package feathers.controls
 		 * point issues can start to appear.
 		 */
 		private static const MINIMUM_VELOCITY:Number = 0.02;
+		private static const MAXIMUM_VELOCITY:Number = 50.0;
 
 		/**
 		 * @private
 		 * The friction applied every frame when the scroller is "thrown".
 		 */
-		private static const FRICTION:Number = 0.998;
+		private static const FRICTION:Number = 0.999;
 
 		/**
 		 * @private
@@ -271,13 +272,13 @@ package feathers.controls
 		 * @private
 		 * The current velocity is given high importance.
 		 */
-		private static const CURRENT_VELOCITY_WEIGHT:Number = 2.33;
+		private static const CURRENT_VELOCITY_WEIGHT:Number = 2;
 
 		/**
 		 * @private
 		 * Older saved velocities are given less importance.
 		 */
-		private static const VELOCITY_WEIGHTS:Vector.<Number> = new <Number>[1, 1.33, 1.66, 2];
+		private static const VELOCITY_WEIGHTS:Vector.<Number> = new <Number>[0.1, 0.5, 1, 1.5];
 
 		/**
 		 * @private
@@ -538,6 +539,9 @@ package feathers.controls
 		 * @private
 		 */
 		protected var _viewPort:IViewPort;
+
+		protected var _timeOfLastFrame : Number = 0;
+		protected var _timeOfLastMouseDown : Number = 0;
 
 		/**
 		 * The display object displayed and scrolled within the Scroller.
@@ -4175,6 +4179,7 @@ package feathers.controls
 			touch.getLocation(this, HELPER_POINT);
 			var touchX:Number = HELPER_POINT.x;
 			var touchY:Number = HELPER_POINT.y;
+			_timeOfLastMouseDown = getTimer();
 			if(touchX < this._leftViewPortOffset || touchY < this._topViewPortOffset ||
 				touchX >= this.actualWidth - this._rightViewPortOffset ||
 				touchY >= this.actualHeight - this._bottomViewPortOffset)
@@ -4217,11 +4222,12 @@ package feathers.controls
 		 */
 		protected function enterFrameHandler(event:Event):void
 		{
+			const now:int = getTimer();
+			_timeOfLastFrame = now;
 			if(this._isScrollingStopped)
 			{
 				return;
 			}
-			const now:int = getTimer();
 			const timeOffset:int = now - this._previousTouchTime;
 			if(timeOffset > 0)
 			{
@@ -4332,6 +4338,11 @@ package feathers.controls
 					return;
 				}
 
+				if (_timeOfLastMouseDown > _timeOfLastFrame)
+				{
+					enterFrameHandler(null);
+				}
+
 				if(!isFinishingHorizontally && this._isDraggingHorizontally)
 				{
 					//take the average for more accuracy
@@ -4344,6 +4355,11 @@ package feathers.controls
 						sum += this._previousVelocityX.shift() * weight;
 						totalWeight += weight;
 					}
+					var velocity:Number = sum / totalWeight;
+					if(velocity > MAXIMUM_VELOCITY)
+						velocity = MAXIMUM_VELOCITY;
+					if(velocity < -MAXIMUM_VELOCITY)
+						velocity = -MAXIMUM_VELOCITY;
 					this.throwHorizontally(sum / totalWeight);
 				}
 				else
@@ -4362,7 +4378,12 @@ package feathers.controls
 						sum += this._previousVelocityY.shift() * weight;
 						totalWeight += weight;
 					}
-					this.throwVertically(sum / totalWeight);
+					velocity = sum / totalWeight;
+					if(velocity > MAXIMUM_VELOCITY)
+						velocity = MAXIMUM_VELOCITY;
+					if(velocity < -MAXIMUM_VELOCITY)
+						velocity = -MAXIMUM_VELOCITY;
+					this.throwVertically(velocity);
 				}
 				else
 				{
