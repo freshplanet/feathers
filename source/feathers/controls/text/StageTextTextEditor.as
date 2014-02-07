@@ -718,7 +718,7 @@ package feathers.controls.text
 			HELPER_POINT.x = HELPER_POINT.y = 0;
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
 			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
-			if(HELPER_POINT.x != this._oldGlobalX || HELPER_POINT.y != this._oldGlobalY)
+			if(this.stageText && (HELPER_POINT.x != this._oldGlobalX) || (HELPER_POINT.y != this._oldGlobalY))
 			{
 				this._oldGlobalX = HELPER_POINT.x;
 				this._oldGlobalY = HELPER_POINT.y;
