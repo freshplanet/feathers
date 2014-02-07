@@ -1873,7 +1873,7 @@ package feathers.controls
 					return;
 				}
 				this._touchPointID = -1;
-				if(this.textEditor.setTouchFocusOnEndedPhase)
+				if(this.textEditor && this.textEditor.setTouchFocusOnEndedPhase)
 				{
 					this.setFocusOnTextEditorWithTouch(touch);
 				}
@@ -1884,7 +1884,7 @@ package feathers.controls
 				if(touch)
 				{
 					this._touchPointID = touch.id;
-					if(!this.textEditor.setTouchFocusOnEndedPhase)
+					if(this.textEditor && !this.textEditor.setTouchFocusOnEndedPhase)
 					{
 						this.setFocusOnTextEditorWithTouch(touch);
 					}
