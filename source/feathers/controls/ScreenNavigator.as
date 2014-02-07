@@ -302,6 +302,12 @@ package feathers.controls
 		 */
 		public function showScreen(id:String):DisplayObject
 		{
+			prepareScreen(id);
+			return startTransition();
+		}
+		
+		public function prepareScreen(id:String):DisplayObject
+		{
 			if(!this._screens.hasOwnProperty(id))
 			{
 				throw new IllegalOperationError("Screen with id '" + id + "' cannot be shown because it has not been defined.");
@@ -391,6 +397,11 @@ package feathers.controls
 				VALIDATION_QUEUE.advanceTime(0);
 			}
 
+			return this._activeScreen;
+		}
+		
+		public function startTransition():DisplayObject
+		{
 			this.dispatchEventWith(FeathersEventType.TRANSITION_START);
 			this.transition(this._previousScreenInTransition, this._activeScreen, transitionComplete);
 
