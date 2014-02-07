@@ -12,12 +12,14 @@ package feathers.core
 	import feathers.events.FeathersEventType;
 	import feathers.layout.ILayoutData;
 	import feathers.layout.ILayoutDisplayObject;
+	
 
 	import flash.errors.IllegalOperationError;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Sprite;
 	import starling.events.Event;
@@ -1330,6 +1332,7 @@ package feathers.core
 				return;
 			}
 			this._isValidating = true;
+			Starling.renderEnabled = true;
 			this.draw();
 			for(var flag:String in this._invalidationFlags)
 			{
