@@ -7,14 +7,15 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls
 {
-	import feathers.core.FeathersControl;
-	import feathers.core.IFeathersControl;
-	import feathers.events.FeathersEventType;
-
 	import flash.errors.IllegalOperationError;
 	import flash.geom.Rectangle;
 	import flash.utils.getDefinitionByName;
-
+	
+	import feathers.core.FeathersControl;
+	import feathers.core.IFeathersControl;
+	import feathers.events.FeathersEventType;
+	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
@@ -649,7 +650,9 @@ package feathers.controls
 				}
 				else
 				{
-					newWidth = this.stage.stageWidth;
+					// BUG FIX: Starling's stageHeight doesn't take into account the status bar on Android and on the AIR simulator. Adobe's stageHeight does.
+					//newWidth = this.stage.stageWidth;
+					newWidth = Starling.current.nativeStage.stageWidth;
 				}
 			}
 
@@ -662,7 +665,7 @@ package feathers.controls
 				}
 				else
 				{
-					newHeight = this.stage.stageHeight;
+					newHeight = Starling.current.nativeStage.stageHeight;
 				}
 			}
 
