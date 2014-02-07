@@ -1142,6 +1142,13 @@ package feathers.controls.text
 			//StageText sucks because it requires that the BitmapData's width
 			//and height exactly match its view port width and height.
 			var bitmapData:BitmapData = new BitmapData(viewPort.width, viewPort.height, true, 0x00ff00ff);
+			
+			// Patch for a bug on iOS: drawViewPortToBitmapData creates a croped bitmap the first time you call
+			// it on iOS, so I call it twice - Arno
+			if(Pop.tools.isiOS()){
+				this.stageText.drawViewPortToBitmapData(bitmapData);
+				bitmapData = new BitmapData(viewPort.width, viewPort.height, true, 0x00ff00ff);
+			}
 			this.stageText.drawViewPortToBitmapData(bitmapData);
 
 			var newTexture:Texture;
