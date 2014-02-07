@@ -1213,6 +1213,19 @@ package feathers.controls.text
 			{
 				viewPortHeight = 1;
 			}
+			
+			// Hack to avoid following bug with AIR 3.9:
+			// https://bugbase.adobe.com/index.cfm?event=bug&id=3648234
+			// TODO: Remove when AIR bug fixed!
+			if ( Pop.tools.isiOS7() )
+			{
+				stageTextViewPort.y += 2;
+				
+				if ( Assets.getContentScale() > .8 ) 	viewPortHeight -= 24;
+				else									viewPortHeight -= 16;
+			}
+			// Hack end
+			
 			stageTextViewPort.width = viewPortWidth;
 			stageTextViewPort.height = viewPortHeight;
 			this.stageText.viewPort = stageTextViewPort;
