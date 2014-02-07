@@ -836,6 +836,9 @@ package feathers.controls.text
 			{
 				this._pendingSelectionStartIndex = -1;
 				this._pendingSelectionEndIndex = -1;
+				
+				if ( ( startIndex == 0 && endIndex == 0 ) || this.stageText.text == "" ) return;
+				
 				this.stageText.selectRange(startIndex, endIndex);
 			}
 			else
