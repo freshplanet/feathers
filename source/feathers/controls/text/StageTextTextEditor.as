@@ -146,7 +146,7 @@ package feathers.controls.text
 		 * The StageText instance. It's typed Object so that a replacement class
 		 * can be used in browser-based Flash Player.
 		 */
-		protected var stageText:Object;
+		public var stageText:Object;
 
 		/**
 		 * An image that displays a snapshot of the native <code>StageText</code>
