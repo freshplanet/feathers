@@ -667,8 +667,9 @@ package feathers.controls
 			this.dispatchEventWith(FeathersEventType.TRANSITION_COMPLETE);
 			if(this._previousScreenInTransition)
 			{
-				const item:ScreenNavigatorItem = this._screens[this._previousScreenInTransitionID];
-				const canBeDisposed:Boolean = !(item.screen is DisplayObject);
+				var item:ScreenNavigatorItem = this._screens[this._previousScreenInTransitionID];
+				var canBeDisposed:Boolean = item ? (!(item.screen is DisplayObject)) : false;
+
 				if(this._previousScreenInTransition is IScreen)
 				{
 					const screen:IScreen = IScreen(this._previousScreenInTransition);
