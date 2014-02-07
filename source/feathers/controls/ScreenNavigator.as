@@ -705,10 +705,11 @@ package feathers.controls
 			}
 			else if(this._nextScreenID)
 			{
-				this.showScreen(this._nextScreenID);
+				var temp:String = this._nextScreenID;
+				this._nextScreenID = null;
+				this.showScreen(temp);
 			}
 
-			this._nextScreenID = null;
 			this._clearAfterTransition = false;
 		}
 
