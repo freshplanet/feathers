@@ -853,11 +853,11 @@ package feathers.controls.supportClasses
 					{
 						this._inactiveRenderers[inactiveIndex] = null;
 					}
-					else if(renderer != this._typicalItemRenderer)
-					{
-						//the typicalItemRenderer may not be in the inactiveRenderers
-						throw new IllegalOperationError("This List is in an unrecoverable state.");
-					}
+//					else if(renderer != this._typicalItemRenderer)
+//					{
+//						//the typicalItemRenderer may not be in the inactiveRenderers
+//						throw new IllegalOperationError("This List is in an unrecoverable state.");
+//					}
 					this._layoutItems[index + this._layoutIndexOffset] = DisplayObject(renderer);
 				}
 				else
