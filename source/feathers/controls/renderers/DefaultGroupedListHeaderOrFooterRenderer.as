@@ -1095,6 +1095,8 @@ package feathers.controls.renderers
 		 */
 		override public function dispose():void
 		{
+			this.data = null;
+			
 			//the content may have come from outside of this class. it's up
 			//to that code to dispose of the content. in fact, if we disposed
 			//of it here, we might screw something up!

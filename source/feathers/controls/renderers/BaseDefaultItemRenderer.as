@@ -1622,6 +1622,7 @@ package feathers.controls.renderers
 		 */
 		override public function dispose():void
 		{
+			this.data = null;
 			this.replaceIcon(null);
 			this.replaceAccessory(null);
 			if(this._stateDelayTimer)
