@@ -2366,7 +2366,7 @@ package feathers.controls.renderers
 				}
 				return labelResult.toString();
 			}
-			else if(this._labelField != null && item && item.hasOwnProperty(this._labelField))
+			else if(this._labelField != null && item && item.hasOwnProperty(this._labelField) && item[this._labelField])
 			{
 				labelResult = item[this._labelField];
 				if(labelResult is String)
