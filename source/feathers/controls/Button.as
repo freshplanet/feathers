@@ -102,7 +102,7 @@ package feathers.controls
 		 *
 		 * <p>An alternate name should always be added to a component's
 		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time.</p>
+		 * the first time. If it is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the call-to-action style is applied to
 		 * a button:</p>
@@ -124,7 +124,7 @@ package feathers.controls
 		 *
 		 * <p>An alternate name should always be added to a component's
 		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time.</p>
+		 * the first time. If it is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the quiet button style is applied to
 		 * a button:</p>
@@ -148,7 +148,7 @@ package feathers.controls
 		 *
 		 * <p>An alternate name should always be added to a component's
 		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time.</p>
+		 * the first time. If it is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the danger button style is applied to
 		 * a button:</p>
@@ -170,7 +170,7 @@ package feathers.controls
 		 *
 		 * <p>An alternate name should always be added to a component's
 		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time.</p>
+		 * the first time. If it is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the back button style is applied to
 		 * a button:</p>
@@ -192,7 +192,7 @@ package feathers.controls
 		 *
 		 * <p>An alternate name should always be added to a component's
 		 * <code>nameList</code> before the component is added to the stage for
-		 * the first time.</p>
+		 * the first time. If it is added later, it will be ignored.</p>
 		 *
 		 * <p>In the following example, the forward button style is applied to
 		 * a button:</p>
@@ -320,6 +320,8 @@ package feathers.controls
 		
 		/**
 		 * The icon and label will be aligned vertically to the top edge of the button.
+		 *
+		 * @see #verticalAlign
 		 */
 		public static const VERTICAL_ALIGN_TOP:String = "top";
 		
@@ -2731,10 +2733,6 @@ package feathers.controls
 			}
 			this.refreshMaxLabelWidth(true);
 			this.labelTextRenderer.measureText(HELPER_POINT);
-			if(this.currentIcon is IFeathersControl)
-			{
-				IFeathersControl(this.currentIcon).validate();
-			}
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
@@ -2981,10 +2979,6 @@ package feathers.controls
 		 */
 		protected function layoutContent():void
 		{
-			if(this.currentIcon is IFeathersControl)
-			{
-				IFeathersControl(this.currentIcon).validate();
-			}
 			this.refreshMaxLabelWidth(false);
 			if(this._label && this.currentIcon)
 			{
@@ -3028,6 +3022,10 @@ package feathers.controls
 		 */
 		protected function refreshMaxLabelWidth(forMeasurement:Boolean):void
 		{
+			if(this.currentIcon is IFeathersControl)
+			{
+				IFeathersControl(this.currentIcon).validate();
+			}
 			var calculatedWidth:Number = this.actualWidth;
 			if(forMeasurement)
 			{
@@ -3340,7 +3338,7 @@ package feathers.controls
 		 */
 		protected function longPress_enterFrameHandler(event:Event):void
 		{
-			const accumulatedTime:int = (getTimer() - this._touchBeginTime) / 1000;
+			var accumulatedTime:Number = (getTimer() - this._touchBeginTime) / 1000;
 			if(accumulatedTime >= this._longPressDuration)
 			{
 				this.removeEventListener(Event.ENTER_FRAME, longPress_enterFrameHandler);

@@ -7,18 +7,19 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
+	import flash.errors.IllegalOperationError;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
+	
 	import feathers.controls.text.BitmapFontTextRenderer;
 	import feathers.controls.text.StageTextTextEditor;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.ILayoutData;
 	import feathers.layout.ILayoutDisplayObject;
+	import feathers.utils.display.getDisplayObjectDepthFromStage;
 	
-
-	import flash.errors.IllegalOperationError;
-	import flash.geom.Matrix;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Sprite;
@@ -69,15 +70,7 @@ package feathers.core
 		/**
 		 * @private
 		 */
-		protected static const VALIDATION_QUEUE:ValidationQueue = new ValidationQueue();
-
-		/**
-		 * @private
-		 * Used for clipping.
-		 *
-		 * @see #clipRect
-		 */
-		protected static var currentScissorRect:Rectangle;
+		protected static const STARLING_TO_VALIDATION_QUEUE:Dictionary = new Dictionary(true);
 
 		/**
 		 * Flag to indicate that everything is invalid and should be redrawn.
@@ -199,9 +192,15 @@ package feathers.core
 		public function FeathersControl()
 		{
 			super();
-			this.addEventListener(Event.ADDED_TO_STAGE, initialize_addedToStageHandler);
+			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
+			this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
 			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
 		}
+
+		/**
+		 * @private
+		 */
+		protected var _validationQueue:ValidationQueue;
 
 		/**
 		 * @private
@@ -214,8 +213,15 @@ package feathers.core
 		 * can differentiate multiple styles of the same type of UI control. A
 		 * single control may have many names, and many controls can share a
 		 * single name. Names may be added, removed, or toggled on the <code>nameList</code>.
+		 * Names cannot contain spaces.
+		 *
+		 * <p>In the following example, a name is added to the name list:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.nameList.add( "custom-component-name" );</listing>
 		 *
 		 * @see #name
+		 * @see http://wiki.starling-framework.org/feathers/extending-themes
 		 */
 		public function get nameList():TokenList
 		{
@@ -229,9 +235,14 @@ package feathers.core
 		 * same type of UI control. A single control may have many names, and
 		 * many controls can share a single name.
 		 *
+		 * <p>In general, the <code>name</code> property should not be set on a
+		 * Feathers component. You should add and remove names from the
+		 * <code>nameList</code> property instead.</p>
+		 *
 		 * @default ""
 		 *
 		 * @see #nameList
+		 * @see http://wiki.starling-framework.org/feathers/extending-themes
 		 */
 		override public function get name():String
 		{
@@ -256,6 +267,11 @@ package feathers.core
 		 * <code>true</code>, children cannot dispatch touch events, but hit
 		 * tests will be much faster. Easier than overriding
 		 * <code>hitTest()</code>.
+		 *
+		 * <p>In the following example, the quick hit area is enabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.isQuickHitAreaEnabled = true;</listing>
 		 *
 		 * @default false
 		 */
@@ -286,6 +302,18 @@ package feathers.core
 		 * Determines if the component has been initialized yet. The
 		 * <code>initialize()</code> function is called one time only, when the
 		 * Feathers UI control is added to the display list for the first time.
+		 *
+		 * <p>In the following example, we check if the component is initialized
+		 * or not, and we listen for an event if it isn't:</p>
+		 *
+		 * <listing version="3.0">
+		 * if( !control.isInitialized )
+		 * {
+		 *     control.addEventListener( FeathersEventType.INITIALIZE, initializeHandler );
+		 * }</listing>
+		 *
+		 * @see #event:initialize
+		 * @see #isCreated
 		 */
 		public function get isInitialized():Boolean
 		{
@@ -316,6 +344,11 @@ package feathers.core
 
 		/**
 		 * Indicates whether the control is interactive or not.
+		 *
+		 * <p>In the following example, the control is disabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.isEnabled = false;</listing>
 		 *
 		 * @default true
 		 */
@@ -376,6 +409,17 @@ package feathers.core
 		 * the dimensions before the component had validated. Call
 		 * <code>validate()</code> to tell the component to immediately redraw
 		 * and calculate an accurate values for the dimensions.</p>
+		 *
+		 * <p>In the following example, the width is set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.width = 120;</listing>
+		 *
+		 * <p>In the following example, the width is cleared so that the
+		 * component can automatically measure its own width:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.width = NaN;</listing>
 		 * 
 		 * @see feathers.core.IFeathersControl#validate()
 		 */
@@ -449,6 +493,17 @@ package feathers.core
 		 * the dimensions before the component had validated. Call
 		 * <code>validate()</code> to tell the component to immediately redraw
 		 * and calculate an accurate values for the dimensions.</p>
+		 *
+		 * <p>In the following example, the height is set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.height = 120;</listing>
+		 *
+		 * <p>In the following example, the height is cleared so that the
+		 * component can automatically measure its own height:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.height = NaN;</listing>
 		 * 
 		 * @see feathers.core.IFeathersControl#validate()
 		 */
@@ -492,6 +547,12 @@ package feathers.core
 		 * If using <code>isQuickHitAreaEnabled</code>, and the hit area's
 		 * width is smaller than this value, it will be expanded.
 		 *
+		 * <p>In the following example, the minimum width of the hit area is
+		 * set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.minTouchWidth = 120;</listing>
+		 *
 		 * @default 0
 		 */
 		public function get minTouchWidth():Number
@@ -520,6 +581,12 @@ package feathers.core
 		/**
 		 * If using <code>isQuickHitAreaEnabled</code>, and the hit area's
 		 * height is smaller than this value, it will be expanded.
+		 *
+		 * <p>In the following example, the minimum height of the hit area is
+		 * set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.minTouchHeight = 120;</listing>
 		 *
 		 * @default 0
 		 */
@@ -552,6 +619,12 @@ package feathers.core
 		 * is not strictly enforced in all cases. An explicit width value that
 		 * is smaller than <code>minWidth</code> may be set and will not be
 		 * affected by the minimum.
+		 *
+		 * <p>In the following example, the minimum width of the control is
+		 * set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.minWidth = 120;</listing>
 		 *
 		 * @default 0
 		 */
@@ -589,6 +662,12 @@ package feathers.core
 		 * is smaller than <code>minHeight</code> may be set and will not be
 		 * affected by the minimum.
 		 *
+		 * <p>In the following example, the minimum height of the control is
+		 * set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.minHeight = 120;</listing>
+		 *
 		 * @default 0
 		 */
 		public function get minHeight():Number
@@ -625,6 +704,12 @@ package feathers.core
 		 * is larger than <code>maxWidth</code> may be set and will not be
 		 * affected by the maximum.
 		 *
+		 * <p>In the following example, the maximum width of the control is
+		 * set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.maxWidth = 120;</listing>
+		 *
 		 * @default Number.POSITIVE_INFINITY
 		 */
 		public function get maxWidth():Number
@@ -660,6 +745,12 @@ package feathers.core
 		 * is not strictly enforced in all cases. An explicit height value that
 		 * is larger than <code>maxHeight</code> may be set and will not be
 		 * affected by the maximum.
+		 *
+		 * <p>In the following example, the maximum width of the control is
+		 * set to 120 pixels:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.maxWidth = 120;</listing>
 		 *
 		 * @default Number.POSITIVE_INFINITY
 		 */
@@ -911,6 +1002,11 @@ package feathers.core
 		 * dimensions of the component or its hit area. It is simply a visual
 		 * indicator of focus.</p>
 		 *
+		 * <p>In the following example, the focus indicator skin is set:</p>
+		 *
+		 * <listing version="3.0">
+		 * control.focusIndicatorSkin = new Image( texture );</listing>
+		 *
 		 * @default null
 		 */
 		public function get focusIndicatorSkin():DisplayObject
@@ -956,7 +1052,7 @@ package feathers.core
 		 * on all sides:</p>
 		 *
 		 * <listing version="3.0">
-		 * object.padding = 2;</listing>
+		 * control.focusPadding = 2;</listing>
 		 *
 		 * @default 0
 		 *
@@ -995,7 +1091,7 @@ package feathers.core
 		 * padding on the top edge only:</p>
 		 *
 		 * <listing version="3.0">
-		 * button.focusPaddingTop = -2;</listing>
+		 * control.focusPaddingTop = -2;</listing>
 		 *
 		 * @default 0
 		 */
@@ -1031,7 +1127,7 @@ package feathers.core
 		 * padding on the right edge only:</p>
 		 *
 		 * <listing version="3.0">
-		 * button.focusPaddingRight = -2;</listing>
+		 * control.focusPaddingRight = -2;</listing>
 		 *
 		 * @default 0
 		 */
@@ -1067,7 +1163,7 @@ package feathers.core
 		 * padding on the bottom edge only:</p>
 		 *
 		 * <listing version="3.0">
-		 * button.focusPaddingBottom = -2;</listing>
+		 * control.focusPaddingBottom = -2;</listing>
 		 *
 		 * @default 0
 		 */
@@ -1103,7 +1199,7 @@ package feathers.core
 		 * padding on the right edge only:</p>
 		 *
 		 * <listing version="3.0">
-		 * button.focusPaddingLeft = -2;</listing>
+		 * control.focusPaddingLeft = -2;</listing>
 		 *
 		 * @default 0
 		 */
@@ -1148,6 +1244,41 @@ package feathers.core
 		protected var _hasValidated:Boolean = false;
 
 		/**
+		 * Determines if the component has been initialized and validated for
+		 * the first time.
+		 *
+		 * <p>In the following example, we check if the component is created or
+		 * not, and we listen for an event if it isn't:</p>
+		 *
+		 * <listing version="3.0">
+		 * if( !control.isCreated )
+		 * {
+		 *     control.addEventListener( FeathersEventType.CREATION_COMPLETE, creationCompleteHandler );
+		 * }</listing>
+		 *
+		 * @see #event:creationComplete
+		 * @see #isInitialized
+		 */
+		public function get isCreated():Boolean
+		{
+			return this._hasValidated;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _depth:int = -1;
+
+		/**
+		 * The component's depth in the display list, relative to the stage. If
+		 * the component isn't on the stage, its depth will be <code>-1</code>.
+		 */
+		public function get depth():int
+		{
+			return this._depth;
+		}
+
+		/**
 		 * @private
 		 */
 		protected var _invalidateCount:int = 0;
@@ -1155,7 +1286,32 @@ package feathers.core
 		/**
 		 * @private
 		 */
-		public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
+		override public function getChildByName(name:String):DisplayObject
+		{
+			var childCount:int = this.numChildren;
+			for(var i:int = 0; i < childCount; i++)
+			{
+				var child:DisplayObject = this.getChildAt(i);
+				if(child is IFeathersControl)
+				{
+					var feathersChild:IFeathersControl = IFeathersControl(child);
+					if(feathersChild.nameList.contains(name))
+					{
+						return DisplayObject(feathersChild);
+					}
+				}
+				else if(child.name == name)
+				{
+					return child;
+				}
+			}
+			return null;
+		}
+
+		/**
+		 * @private
+		 */
+		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
 		{
 			if(!resultRect)
 			{
@@ -1231,6 +1387,15 @@ package feathers.core
 		}
 
 		/**
+		 * @private
+		 */
+		override public function dispose():void
+		{
+			this._validationQueue = null;
+			super.dispose();
+		}
+
+		/**
 		 * Call this function to tell the UI control that a redraw is pending.
 		 * The redraw will happen immediately before Starling renders the UI
 		 * control to the screen. The validation system exists to ensure that
@@ -1274,12 +1439,12 @@ package feathers.core
 				{
 					this._delayedInvalidationFlags[flag] = true;
 				}
-				else if(flag != INVALIDATION_FLAG_ALL)
+				else if(flag != INVALIDATION_FLAG_ALL && !this._invalidationFlags.hasOwnProperty(flag))
 				{
 					this._invalidationFlags[flag] = true;
 				}
 			}
-			if(!this.stage || !this._isInitialized)
+			if(!this._validationQueue || !this._isInitialized)
 			{
 				//we'll add this component to the queue later, after it has been
 				//added to the stage.
@@ -1292,7 +1457,7 @@ package feathers.core
 					return;
 				}
 				this._invalidateCount++;
-				VALIDATION_QUEUE.addControl(this, this._invalidateCount >= 10);
+				this._validationQueue.addControl(this, this._invalidateCount >= 10);
 				return;
 			}
 			if(isAlreadyInvalid)
@@ -1300,7 +1465,7 @@ package feathers.core
 				return;
 			}
 			this._invalidateCount = 0;
-			VALIDATION_QUEUE.addControl(this, false);
+			this._validationQueue.addControl(this, false);
 		}
 
 		/**
@@ -1320,7 +1485,7 @@ package feathers.core
 		 */
 		public function validate():void
 		{
-			if(!this.stage || !this._isInitialized || !this.isInvalid())
+			if(!this._validationQueue || !this._isInitialized || !this.isInvalid())
 			{
 				return;
 			}
@@ -1328,7 +1493,7 @@ package feathers.core
 			{
 				//we were already validating, and something else told us to
 				//validate. that's bad.
-				VALIDATION_QUEUE.addControl(this, true);
+				this._validationQueue.addControl(this, true);
 				return;
 			}
 			this._isValidating = true;
@@ -1525,8 +1690,14 @@ package feathers.core
 				}
 				resized = true;
 			}
+			width = this.scaledActualWidth;
+			height = this.scaledActualHeight;
 			this.scaledActualWidth = this.actualWidth * Math.abs(this.scaleX);
 			this.scaledActualHeight = this.actualHeight * Math.abs(this.scaleY);
+			if(width != this.scaledActualWidth || height != this.scaledActualHeight)
+			{
+				resized = true;
+			}
 			if(resized)
 			{
 				if(canInvalidate)
@@ -1560,6 +1731,32 @@ package feathers.core
 		protected function draw():void
 		{
 
+		}
+
+		/**
+		 * Sets an invalidation flag. This will not add the component to the
+		 * validation queue. It only sets the flag. A subclass might use
+		 * this function during <code>draw()</code> to manipulate the flags that
+		 * its superclass sees.
+		 */
+		protected function setInvalidationFlag(flag:String):void
+		{
+			if(this._invalidationFlags.hasOwnProperty(flag))
+			{
+				return;
+			}
+			this._invalidationFlags[flag] = true;
+		}
+
+		/**
+		 * Clears an invalidation flag. This will not remove the component from
+		 * the validation queue. It only clears the flag. A subclass might use
+		 * this function during <code>draw()</code> to manipulate the flags that
+		 * its superclass sees.
+		 */
+		protected function clearInvalidationFlag(flag:String):void
+		{
+			delete this._invalidationFlags[flag];
 		}
 
 		/**
@@ -1634,14 +1831,21 @@ package feathers.core
 		/**
 		 * @private
 		 * Initialize the control, if it hasn't been initialized yet. Then,
-		 * invalidate.
+		 * invalidate. If already initialized, check if invalid and put back
+		 * into queue.
 		 */
-		protected function initialize_addedToStageHandler(event:Event):void
+		protected function feathersControl_addedToStageHandler(event:Event):void
 		{
-			if(event.target != this)
+			this._depth = getDisplayObjectDepthFromStage(this);
+
+			var starling:Starling = Starling.current;
+			var queue:ValidationQueue = STARLING_TO_VALIDATION_QUEUE[starling];
+			if(!queue)
 			{
-				return;
+				STARLING_TO_VALIDATION_QUEUE[starling] = queue = new ValidationQueue(starling);
 			}
+			this._validationQueue = queue;
+
 			if(!this._isInitialized)
 			{
 				this.initialize();
@@ -1649,12 +1853,21 @@ package feathers.core
 				this._isInitialized = true;
 				this.dispatchEventWith(FeathersEventType.INITIALIZE, false);
 			}
-
 			if(this.isInvalid())
 			{
 				this._invalidateCount = 0;
-				VALIDATION_QUEUE.addControl(this, false);
+				//add to validation queue, if required
+				this._validationQueue.addControl(this, false);
 			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function feathersControl_removedFromStageHandler(event:Event):void
+		{
+			this._depth = -1;
+			this._validationQueue = null;
 		}
 
 		/**

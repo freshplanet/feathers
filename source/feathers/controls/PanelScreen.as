@@ -46,18 +46,10 @@ package feathers.controls
 	 *     }
 	 * }</listing>
 	 *
-	 * <p><strong>Beta Component:</strong> This is a new component, and its APIs
-	 * may need some changes between now and the next version of Feathers to
-	 * account for overlooked requirements or other issues. Upgrading to future
-	 * versions of Feathers may involve manual changes to your code that uses
-	 * this component. The
-	 * <a href="http://wiki.starling-framework.org/feathers/deprecation-policy">Feathers deprecation policy</a>
-	 * will not go into effect until this component's status is upgraded from
-	 * beta to stable.</p>
-	 *
 	 * @see ScreenNavigator
-	 * @see Panel
+	 * @see ScrollScreen
 	 * @see Screen
+	 * @see Panel
 	 * @see http://wiki.starling-framework.org/feathers/panel-screen
 	 */
 	public class PanelScreen extends Panel implements IScreen
@@ -113,6 +105,20 @@ package feathers.controls
 		 * @see feathers.controls.Scroller#scrollBarDisplayMode
 		 */
 		public static const SCROLL_BAR_DISPLAY_MODE_NONE:String = "none";
+
+		/**
+		 * The vertical scroll bar will be positioned on the right.
+		 *
+		 * @see feathers.controls.Scroller#verticalScrollBarPosition
+		 */
+		public static const VERTICAL_SCROLL_BAR_POSITION_RIGHT:String = "right";
+
+		/**
+		 * The vertical scroll bar will be positioned on the left.
+		 *
+		 * @see feathers.controls.Scroller#verticalScrollBarPosition
+		 */
+		public static const VERTICAL_SCROLL_BAR_POSITION_LEFT:String = "left";
 
 		/**
 		 * @copy feathers.controls.Scroller#INTERACTION_MODE_TOUCH
@@ -322,10 +328,6 @@ package feathers.controls
 		 */
 		protected function panelScreen_addedToStageHandler(event:Event):void
 		{
-			if(event.target != this)
-			{
-				return;
-			}
 			this.addEventListener(Event.REMOVED_FROM_STAGE, panelScreen_removedFromStageHandler);
 			//using priority here is a hack so that objects higher up in the
 			//display list have a chance to cancel the event first.
@@ -338,10 +340,6 @@ package feathers.controls
 		 */
 		protected function panelScreen_removedFromStageHandler(event:Event):void
 		{
-			if(event.target != this)
-			{
-				return;
-			}
 			this.removeEventListener(Event.REMOVED_FROM_STAGE, panelScreen_removedFromStageHandler);
 			Starling.current.nativeStage.removeEventListener(KeyboardEvent.KEY_DOWN, panelScreen_nativeStage_keyDownHandler);
 		}

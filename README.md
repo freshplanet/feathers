@@ -6,16 +6,17 @@ Say hello to [Feathers](http://feathersui.com/), a library of light-weight, skin
 
 * [Feathers Website](http://feathersui.com/)
 * [List of Features](http://wiki.starling-framework.org/feathers/features)
-* [The Feathers Manual](http://wiki.starling-framework.org/feathers/start)
-* [API Documentation](http://feathersui.com/documentation/)
+* [Feathers Documentation](http://wiki.starling-framework.org/feathers/start)
+* [API Reference](http://feathersui.com/documentation/)
+* [Live Browser Examples](http://feathersui.com/examples/)
 * [Support Forum](http://forum.starling-framework.org/forum/feathers)
 * [Github Project](https://github.com/joshtynjala/feathers)
 * [Like on Facebook](http://facebook.com/feathersui)
 
 ## Requirements
 
-* Adobe AIR 3.7 or Adobe Flash Player 11.7
-* Starling Framework from Github
+* Adobe AIR 3.5 or Adobe Flash Player 11.5
+* Starling Framework 1.4.1
 
 ## Downloads
 

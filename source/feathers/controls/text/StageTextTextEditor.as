@@ -176,6 +176,11 @@ package feathers.controls.text
 		/**
 		 * The text displayed by the input.
 		 *
+		 * <p>In the following example, the text is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.text = "Lorem ipsum";</listing>
+		 *
 		 * @default ""
 		 */
 		public function get text():String
@@ -239,20 +244,15 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		protected var _oldGlobalX:Number = 0;
-
-		/**
-		 * @private
-		 */
-		protected var _oldGlobalY:Number = 0;
-
-		/**
-		 * @private
-		 */
 		protected var _autoCapitalize:String = "none";
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the auto capitalize behavior is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.autoCapitalize = AutoCapitalize.WORD;</listing>
 		 *
 		 * @default flash.text.AutoCapitalize.NONE
 		 */
@@ -282,6 +282,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, auto correct is enabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.autoCorrect = true;</listing>
+		 *
 		 * @default false
 		 */
 		public function get autoCorrect():Boolean
@@ -309,6 +314,11 @@ package feathers.controls.text
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the text color is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.color = 0xff9900;</listing>
 		 *
 		 * @default 0x000000
 		 */
@@ -338,6 +348,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, the text is displayed as a password:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.displayAsPassword = true;</listing>
+		 *
 		 * @default false
 		 */
 		public function get displayAsPassword():Boolean
@@ -366,6 +381,11 @@ package feathers.controls.text
 		/**
 		 * Determines if the text input is editable. If the text input is not
 		 * editable, it will still appear enabled.
+		 *
+		 * <p>In the following example, the text is not editable:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.isEditable = false;</listing>
 		 *
 		 * @default true
 		 */
@@ -405,6 +425,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, the font family is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.fontFamily = "Source Sans Pro";</listing>
+		 *
 		 * @default null
 		 */
 		public function get fontFamily():String
@@ -432,6 +457,11 @@ package feathers.controls.text
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the font posture is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.fontPosture = FontPosture.ITALIC;</listing>
 		 *
 		 * @default flash.text.engine.FontPosture.NORMAL
 		 */
@@ -461,6 +491,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, the font size is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.fontSize = 16;</listing>
+		 *
 		 * @default 12
 		 */
 		public function get fontSize():int
@@ -488,6 +523,11 @@ package feathers.controls.text
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the font weight is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.fontWeight = FontWeight.BOLD;</listing>
 		 *
 		 * @default flash.text.engine.FontWeight.NORMAL
 		 */
@@ -517,6 +557,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, the locale is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.locale = "ru";</listing>
+		 *
 		 * @default "en"
 		 */
 		public function get locale():String
@@ -544,6 +589,11 @@ package feathers.controls.text
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the maximum character count is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.maxChars = 10;</listing>
 		 *
 		 * @default 0
 		 */
@@ -577,6 +627,11 @@ package feathers.controls.text
 		 * this property changes after the <code>StageText</code> text was
 		 * initially created.
 		 *
+		 * <p>In the following example, multiline is enabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.multiline = true;</listing>
+		 *
 		 * @default false
 		 */
 		public function get multiline():Boolean
@@ -604,6 +659,11 @@ package feathers.controls.text
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the text is restricted to numbers:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.restrict = "0-9";</listing>
 		 *
 		 * @default null
 		 */
@@ -633,6 +693,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, the return key label is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.returnKeyLabel = ReturnKeyLabel.GO;</listing>
+		 *
 		 * @default flash.text.ReturnKeyLabel.DEFAULT
 		 */
 		public function get returnKeyLabel():String
@@ -661,6 +726,11 @@ package feathers.controls.text
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
 		 *
+		 * <p>In the following example, the soft keyboard type is changed:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.softKeyboardType = SoftKeyboardType.NUMBER;</listing>
+		 *
 		 * @default flash.text.SoftKeyboardType.DEFAULT
 		 */
 		public function get softKeyboardType():String
@@ -688,6 +758,11 @@ package feathers.controls.text
 
 		/**
 		 * Same as the <code>StageText</code> property with the same name.
+		 *
+		 * <p>In the following example, the text is centered:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.textAlign = TextFormatAlign.CENTER;</listing>
 		 *
 		 * @default flash.text.TextFormatAlign.START
 		 */
@@ -726,19 +801,35 @@ package feathers.controls.text
 			HELPER_POINT.x = HELPER_POINT.y = 0;
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
 			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
-			if(this.stageText && (HELPER_POINT.x != this._oldGlobalX) || (HELPER_POINT.y != this._oldGlobalY))
+			const starlingViewPort:Rectangle = Starling.current.viewPort;
+			var stageTextViewPort:Rectangle = this.stageText.viewPort;
+			if(!stageTextViewPort)
 			{
-				this._oldGlobalX = HELPER_POINT.x;
-				this._oldGlobalY = HELPER_POINT.y;
-				const starlingViewPort:Rectangle = Starling.current.viewPort;
-				var stageTextViewPort:Rectangle = this.stageText.viewPort;
-				if(!stageTextViewPort)
+				stageTextViewPort = new Rectangle();
+			}
+			var nativeScaleFactor:Number = 1;
+			if(Starling.current.supportHighResolutions)
+			{
+				nativeScaleFactor = Starling.current.nativeStage.contentsScaleFactor;
+			}
+			var scaleFactor:Number = Starling.contentScaleFactor / nativeScaleFactor;
+			stageTextViewPort.x = Math.round(starlingViewPort.x + (HELPER_POINT.x * scaleFactor));
+			stageTextViewPort.y = Math.round(starlingViewPort.y + (HELPER_POINT.y * scaleFactor));
+			this.stageText.viewPort = stageTextViewPort;
+
+			if(this.stageText.visible)
+			{
+				this.getTransformationMatrix(this.stage, HELPER_MATRIX);
+				var globalScaleX:Number = matrixToScaleX(HELPER_MATRIX);
+				var globalScaleY:Number = matrixToScaleY(HELPER_MATRIX);
+				var smallerGlobalScale:Number = globalScaleX;
+				if(globalScaleY < globalScaleX)
 				{
-					stageTextViewPort = new Rectangle();
+					smallerGlobalScale = globalScaleY;
 				}
-				stageTextViewPort.x = Math.round(starlingViewPort.x + (HELPER_POINT.x * Starling.contentScaleFactor));
-				stageTextViewPort.y = Math.round(starlingViewPort.y + (HELPER_POINT.y * Starling.contentScaleFactor));
-				this.stageText.viewPort = stageTextViewPort;
+				//for some reason, we don't need to account for the native scale factor here
+				scaleFactor = Starling.contentScaleFactor;
+				this.stageText.fontSize = this._fontSize * scaleFactor * smallerGlobalScale;
 			}
 
 			if(this.textSnapshot)
@@ -877,7 +968,14 @@ package feathers.controls.text
 				return result;
 			}
 
-			this.commit();
+
+			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+
+			if(stylesInvalid || dataInvalid)
+			{
+				this.refreshMeasureProperties();
+			}
 
 			result = this.measure(result);
 
@@ -907,6 +1005,11 @@ package feathers.controls.text
 			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
 
+			if(stylesInvalid || dataInvalid)
+			{
+				this.refreshMeasureProperties();
+			}
+
 			const oldIgnoreStageTextChanges:Boolean = this._ignoreStageTextChanges;
 			this._ignoreStageTextChanges = true;
 			if(stylesInvalid)
@@ -925,7 +1028,6 @@ package feathers.controls.text
 					}
 					this.stageText.text = this._text;
 				}
-				this._measureTextField.text = this.stageText.text;
 			}
 			this._ignoreStageTextChanges = oldIgnoreStageTextChanges;
 
@@ -1006,11 +1108,8 @@ package feathers.controls.text
 				{
 					this.textSnapshot.visible = !this._stageTextHasFocus;
 					this.textSnapshot.alpha = hasText ? 1 : 0;
-					if(!this._stageTextHasFocus)
-					{
-						this.stageText.visible = false;
-					}
 				}
+				this.stageText.visible = false;
 			}
 
 			this.doPendingActions();
@@ -1048,6 +1147,37 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
+		protected function refreshMeasureProperties():void
+		{
+			this._measureTextField.displayAsPassword = this._displayAsPassword;
+			this._measureTextField.maxChars = this._maxChars;
+			this._measureTextField.restrict = this._restrict;
+			this._measureTextField.multiline = this._measureTextField.wordWrap = this._multiline;
+
+			const format:TextFormat = this._measureTextField.defaultTextFormat;
+			format.color = this._color;
+			format.font = this._fontFamily;
+			format.italic = this._fontPosture == FontPosture.ITALIC;
+			format.size = this._fontSize;
+			format.bold = this._fontWeight == FontWeight.BOLD;
+			var alignValue:String = this._textAlign;
+			if(alignValue == TextFormatAlign.START)
+			{
+				alignValue = TextFormatAlign.LEFT;
+			}
+			else if(alignValue == TextFormatAlign.END)
+			{
+				alignValue = TextFormatAlign.RIGHT;
+			}
+			format.align = alignValue;
+			this._measureTextField.defaultTextFormat = format;
+			this._measureTextField.setTextFormat(format);
+			this._measureTextField.text = this._text;
+		}
+
+		/**
+		 * @private
+		 */
 		protected function refreshStageTextProperties():void
 		{
 			if(this.stageText.multiline != this._multiline)
@@ -1074,7 +1204,9 @@ package feathers.controls.text
 			{
 				smallerGlobalScale = globalScaleY;
 			}
-			this.stageText.fontSize = this._fontSize * Starling.contentScaleFactor * smallerGlobalScale;
+			//for some reason, we don't need to account for the native scale factor here
+			var scaleFactor:Number = Starling.contentScaleFactor;
+			this.stageText.fontSize = this._fontSize * scaleFactor * smallerGlobalScale;
 
 			this.stageText.fontWeight = this._fontWeight;
 			this.stageText.locale = this._locale;
@@ -1083,30 +1215,6 @@ package feathers.controls.text
 			this.stageText.returnKeyLabel = this._returnKeyLabel;
 			this.stageText.softKeyboardType = this._softKeyboardType;
 			this.stageText.textAlign = this._textAlign;
-
-			this._measureTextField.displayAsPassword = this._displayAsPassword;
-			this._measureTextField.maxChars = this._maxChars;
-			this._measureTextField.restrict = this._restrict;
-			this._measureTextField.multiline = this._measureTextField.wordWrap = this._multiline;
-
-			const format:TextFormat = this._measureTextField.defaultTextFormat;
-			format.color = this._color;
-			format.font = this._fontFamily;
-			format.italic = this._fontPosture == FontPosture.ITALIC;
-			format.size = this._fontSize;
-			format.bold = this._fontWeight == FontWeight.BOLD;
-			var alignValue:String = this._textAlign;
-			if(alignValue == TextFormatAlign.START)
-			{
-				alignValue = TextFormatAlign.LEFT;
-			}
-			else if(alignValue == TextFormatAlign.END)
-			{
-				alignValue = TextFormatAlign.RIGHT;
-			}
-			format.align = alignValue;
-			this._measureTextField.defaultTextFormat = format;
-			this._measureTextField.setTextFormat(format);
 		}
 
 		/**
@@ -1135,15 +1243,6 @@ package feathers.controls.text
 		protected function texture_onRestore():void
 		{
 			this.refreshSnapshot();
-			if(this.textSnapshot)
-			{
-				this.textSnapshot.visible = !this._stageTextHasFocus;
-				this.textSnapshot.alpha = this._text.length > 0 ? 1 : 0;
-				if(!this._stageTextHasFocus)
-				{
-					this.stageText.visible = false;
-				}
-			}
 		}
 
 		/**
@@ -1223,16 +1322,20 @@ package feathers.controls.text
 			var globalScaleX:Number = matrixToScaleX(HELPER_MATRIX);
 			var globalScaleY:Number = matrixToScaleY(HELPER_MATRIX);
 			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
-			this._oldGlobalX = HELPER_POINT.x;
-			this._oldGlobalY = HELPER_POINT.y;
-			stageTextViewPort.x = Math.round(starlingViewPort.x + HELPER_POINT.x * Starling.contentScaleFactor);
-			stageTextViewPort.y = Math.round(starlingViewPort.y + HELPER_POINT.y * Starling.contentScaleFactor);
-			var viewPortWidth:Number = Math.round(this.actualWidth * Starling.contentScaleFactor * globalScaleX);
+			var nativeScaleFactor:Number = 1;
+			if(Starling.current.supportHighResolutions)
+			{
+				nativeScaleFactor = Starling.current.nativeStage.contentsScaleFactor;
+			}
+			var scaleFactor:Number = Starling.contentScaleFactor / nativeScaleFactor;
+			stageTextViewPort.x = Math.round(starlingViewPort.x + HELPER_POINT.x * scaleFactor);
+			stageTextViewPort.y = Math.round(starlingViewPort.y + HELPER_POINT.y * scaleFactor);
+			var viewPortWidth:Number = Math.round(this.actualWidth * scaleFactor * globalScaleX);
 			if(viewPortWidth < 1 || isNaN(viewPortWidth))
 			{
 				viewPortWidth = 1;
 			}
-			var viewPortHeight:Number = Math.round(this.actualHeight * Starling.contentScaleFactor * globalScaleY);
+			var viewPortHeight:Number = Math.round(this.actualHeight * scaleFactor * globalScaleY);
 			if(viewPortHeight < 1 || isNaN(viewPortHeight))
 			{
 				viewPortHeight = 1;

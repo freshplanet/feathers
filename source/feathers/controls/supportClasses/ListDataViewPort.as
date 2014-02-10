@@ -24,7 +24,6 @@ package feathers.controls.supportClasses
 	import feathers.layout.ViewPortBounds;
 
 	import flash.errors.IllegalOperationError;
-
 	import flash.geom.Point;
 	import flash.utils.Dictionary;
 
@@ -540,14 +539,22 @@ package feathers.controls.supportClasses
 
 		override protected function draw():void
 		{
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const scrollInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SCROLL);
-			const sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
-			const itemRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_ITEM_RENDERER_FACTORY);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var scrollInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SCROLL);
+			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
+			var selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
+			var itemRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_ITEM_RENDERER_FACTORY);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
+
+			//scrolling only affects the layout is requiresLayoutOnScroll is true
+			if(!layoutInvalid && scrollInvalid && this._layout && this._layout.requiresLayoutOnScroll)
+			{
+				layoutInvalid = true;
+			}
+
+			var basicsInvalid:Boolean = sizeInvalid || dataInvalid || layoutInvalid || itemRendererInvalid;
 
 			var oldIgnoreRendererResizing:Boolean = this._ignoreRendererResizing;
 			this._ignoreRendererResizing = true;
@@ -560,34 +567,37 @@ package feathers.controls.supportClasses
 			{
 				this.refreshViewPortBounds();
 			}
-			if(scrollInvalid || sizeInvalid || dataInvalid || layoutInvalid || itemRendererInvalid)
+			if(basicsInvalid)
 			{
 				this.refreshInactiveRenderers(itemRendererInvalid);
 			}
-			if(stylesInvalid || dataInvalid || layoutInvalid || itemRendererInvalid)
+			if(dataInvalid || layoutInvalid || itemRendererInvalid)
 			{
 				this.refreshLayoutTypicalItem();
 			}
-			if(scrollInvalid || sizeInvalid || dataInvalid || layoutInvalid || itemRendererInvalid)
+			if(basicsInvalid)
 			{
 				this.refreshRenderers();
 			}
-			if(scrollInvalid || stylesInvalid || sizeInvalid || dataInvalid || layoutInvalid || itemRendererInvalid)
+			if(stylesInvalid || basicsInvalid)
 			{
 				this.refreshItemRendererStyles();
 			}
-			if(scrollInvalid || selectionInvalid || sizeInvalid || dataInvalid || layoutInvalid || itemRendererInvalid)
+			if(selectionInvalid || basicsInvalid)
 			{
 				this.refreshSelection();
 			}
-			if(scrollInvalid || stateInvalid || sizeInvalid || dataInvalid || layoutInvalid || itemRendererInvalid)
+			if(stateInvalid || basicsInvalid)
 			{
 				this.refreshEnabled();
 			}
 			this._ignoreLayoutChanges = oldIgnoreLayoutChanges;
 			this._ignoreSelectionChanges = oldIgnoreSelectionChanges;
 
-			this._layout.layout(this._layoutItems, this._viewPortBounds, this._layoutResult);
+			if(stateInvalid || selectionInvalid || stylesInvalid || basicsInvalid)
+			{
+				this._layout.layout(this._layoutItems, this._viewPortBounds, this._layoutResult);
+			}
 
 			this._ignoreRendererResizing = oldIgnoreRendererResizing;
 
@@ -619,7 +629,6 @@ package feathers.controls.supportClasses
 		protected function refreshLayoutTypicalItem():void
 		{
 			var virtualLayout:IVirtualLayout = this._layout as IVirtualLayout;
-
 			if(!virtualLayout || !virtualLayout.useVirtualLayout)
 			{
 				//the old layout was virtual, but this one isn't
@@ -653,33 +662,57 @@ package feathers.controls.supportClasses
 				{
 					typicalItem = this._dataProvider.getItemAt(0);
 				}
-				else
+			}
+
+			if(typicalItem)
+			{
+				var typicalRenderer:IListItemRenderer = IListItemRenderer(this._rendererMap[typicalItem]);
+				if(!typicalRenderer && this._typicalItemRenderer)
 				{
-					virtualLayout.typicalItem = null;
-					return;
+					//we can reuse the typical item renderer if the old typical item
+					//wasn't in the data provider.
+					var canReuse:Boolean = !this._typicalItemIsInDataProvider;
+					if(!canReuse)
+					{
+						//we can also reuse the typical item renderer if the old
+						//typical item was in the data provider, but it isn't now.
+						canReuse = this._dataProvider.getItemIndex(this._typicalItemRenderer.data) < 0;
+					}
+					if(canReuse)
+					{
+						//if the old typical item was in the data provider, remove
+						//it from the renderer map.
+						if(this._typicalItemIsInDataProvider)
+						{
+							delete this._rendererMap[this._typicalItemRenderer.data];
+						}
+						typicalRenderer = this._typicalItemRenderer;
+						typicalRenderer.data = typicalItem;
+						typicalRenderer.index = typicalItemIndex;
+						//if the new typical item is in the data provider, add it
+						//to the renderer map.
+						if(newTypicalItemIsInDataProvider)
+						{
+							this._rendererMap[typicalItem] = typicalRenderer;
+						}
+					}
+				}
+				if(!typicalRenderer)
+				{
+					//if we still don't have a typical item renderer, we need to
+					//create a new one.
+					typicalRenderer = this.createRenderer(typicalItem, typicalItemIndex, false, !newTypicalItemIsInDataProvider);
+					if(!this._typicalItemIsInDataProvider && this._typicalItemRenderer)
+					{
+						//get rid of the old typical item renderer if it isn't
+						//needed anymore.  since it was not in the data provider, we
+						//don't need to mess with the renderer map dictionary.
+						this.destroyRenderer(this._typicalItemRenderer);
+						this._typicalItemRenderer = null;
+					}
 				}
 			}
 
-			var typicalRenderer:IListItemRenderer = IListItemRenderer(this._rendererMap[typicalItem]);
-			if(!typicalRenderer && !newTypicalItemIsInDataProvider && !this._typicalItemIsInDataProvider && this._typicalItemRenderer)
-			{
-				//can use reuse the old item renderer instance
-				typicalRenderer = this._typicalItemRenderer;
-				typicalRenderer.data = typicalItem;
-				typicalRenderer.index = typicalItemIndex;
-			}
-			if(!typicalRenderer)
-			{
-				typicalRenderer = this.createRenderer(typicalItem, typicalItemIndex, false, !newTypicalItemIsInDataProvider);
-				if(!this._typicalItemIsInDataProvider && this._typicalItemRenderer)
-				{
-					//get rid of the old one if it isn't needed anymore
-					this.destroyRenderer(this._typicalItemRenderer);
-					this._typicalItemRenderer = null;
-				}
-			}
-
-			this.refreshOneItemRendererStyles(typicalRenderer);
 			virtualLayout.typicalItem = DisplayObject(typicalRenderer);
 			this._typicalItemRenderer = typicalRenderer;
 			this._typicalItemIsInDataProvider = newTypicalItemIsInDataProvider;
@@ -690,6 +723,10 @@ package feathers.controls.supportClasses
 			for each(var renderer:IListItemRenderer in this._activeRenderers)
 			{
 				this.refreshOneItemRendererStyles(renderer);
+			}
+			if(this._typicalItemRenderer && !this._typicalItemIsInDataProvider)
+			{
+				this.refreshOneItemRendererStyles(this._typicalItemRenderer);
 			}
 		}
 
@@ -708,8 +745,10 @@ package feathers.controls.supportClasses
 
 		protected function refreshSelection():void
 		{
-			for each(var renderer:IListItemRenderer in this._activeRenderers)
+			const rendererCount:int = this._activeRenderers.length;
+			for(var i:int = 0; i < rendererCount; i++)
 			{
+				var renderer:IListItemRenderer = this._activeRenderers[i];
 				renderer.isSelected = this._selectedIndices.getItemIndex(renderer.index) >= 0;
 			}
 		}
@@ -742,7 +781,10 @@ package feathers.controls.supportClasses
 			const temp:Vector.<IListItemRenderer> = this._inactiveRenderers;
 			this._inactiveRenderers = this._activeRenderers;
 			this._activeRenderers = temp;
-			this._activeRenderers.length = 0;
+			if(this._activeRenderers.length > 0)
+			{
+				throw new IllegalOperationError("ListDataViewPort: active renderers should be empty.");
+			}
 			if(itemRendererTypeIsInvalid)
 			{
 				this.recoverInactiveRenderers();
@@ -766,13 +808,20 @@ package feathers.controls.supportClasses
 		{
 			if(this._typicalItemRenderer && this._typicalItemIsInDataProvider)
 			{
-				//this renderer is special and doesn't need to appear in the
-				//inactive renderers cache. in fact, if it did, it could be
-				//reused for other data, which we definitely don't want!
+				//this renderer is already is use by the typical item, so we
+				//don't want to allow it to be used by other items.
 				var inactiveIndex:int = this._inactiveRenderers.indexOf(this._typicalItemRenderer);
 				if(inactiveIndex >= 0)
 				{
-					this._inactiveRenderers.splice(inactiveIndex, 1);
+					this._inactiveRenderers[inactiveIndex] = null;
+				}
+				//if refreshLayoutTypicalItem() was called, it will have already
+				//added the typical item renderer to the active renderers. if
+				//not, we need to do it here.
+				var activeRendererCount:int = this._activeRenderers.length;
+				if(activeRendererCount == 0)
+				{
+					this._activeRenderers[activeRendererCount] = this._typicalItemRenderer;
 				}
 			}
 
@@ -846,18 +895,27 @@ package feathers.controls.supportClasses
 				{
 					//the index may have changed if data was added or removed
 					renderer.index = index;
-					this._activeRenderers[activeRenderersLastIndex] = renderer;
-					activeRenderersLastIndex++;
-					var inactiveIndex:int = this._inactiveRenderers.indexOf(renderer);
-					if(inactiveIndex >= 0)
+					//if this item renderer used to be the typical item
+					//renderer, but it isn't anymore, it may have been set invisible!
+					renderer.visible = true;
+
+					//the typical item renderer is a special case, and we will
+					//have already put it into the active renderers, so we don't
+					//want to do it again!
+					if(this._typicalItemRenderer != renderer)
 					{
-						this._inactiveRenderers[inactiveIndex] = null;
+						this._activeRenderers[activeRenderersLastIndex] = renderer;
+						activeRenderersLastIndex++;
+						var inactiveIndex:int = this._inactiveRenderers.indexOf(renderer);
+						if(inactiveIndex >= 0)
+						{
+							this._inactiveRenderers[inactiveIndex] = null;
+						}
+						else
+						{
+							throw new IllegalOperationError("ListDataViewPort: renderer map contains bad data.");
+						}
 					}
-//					else if(renderer != this._typicalItemRenderer)
-//					{
-//						//the typicalItemRenderer may not be in the inactiveRenderers
-//						throw new IllegalOperationError("This List is in an unrecoverable state.");
-//					}
 					this._layoutItems[index + this._layoutIndexOffset] = DisplayObject(renderer);
 				}
 				else
@@ -1165,9 +1223,13 @@ package feathers.controls.supportClasses
 					this._selectedIndices.removeItemAt(indexOfIndex);
 				}
 			}
-			else
+			else if(isSelected)
 			{
 				this._selectedIndices.data = new <int>[index];
+			}
+			else
+			{
+				this._selectedIndices.removeAll();
 			}
 		}
 

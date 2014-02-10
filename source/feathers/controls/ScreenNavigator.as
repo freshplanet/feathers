@@ -114,8 +114,8 @@ package feathers.controls
 					//signals not being used
 				}
 			}
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
+			this.addEventListener(Event.ADDED_TO_STAGE, screenNavigator_addedToStageHandler);
+			this.addEventListener(Event.REMOVED_FROM_STAGE, screenNavigator_removedFromStageHandler);
 		}
 
 		/**
@@ -391,13 +391,12 @@ package feathers.controls
 			this.addChild(this._activeScreen);
 
 			this.invalidate(INVALIDATION_FLAG_SELECTED);
-//			if(!VALIDATION_QUEUE.isValidating)
+//			if(this._validationQueue && !this._validationQueue.isValidating)
 //			{
 //				//force a COMPLETE validation of everything
 //				//but only if we're not already doing that...
-//				VALIDATION_QUEUE.advanceTime(0);
+//				this._validationQueue.advanceTime(0);
 //			}
-
 			return this._activeScreen;
 		}
 		
@@ -508,6 +507,10 @@ package feathers.controls
 			{
 				throw new IllegalOperationError("Screen '" + id + "' cannot be removed because it has not been added.");
 			}
+			if(this._activeScreenID == id)
+			{
+				this.clearScreen();
+			}
 			delete this._screens[id];
 		}
 
@@ -583,10 +586,16 @@ package feathers.controls
 
 			if(sizeInvalid || selectionInvalid)
 			{
-				if(this._activeScreen && this._autoSizeMode != AUTO_SIZE_MODE_CONTENT)
+				if(this._activeScreen)
 				{
-					this._activeScreen.width = this.actualWidth;
-					this._activeScreen.height = this.actualHeight;
+					if(this._activeScreen.width != this.actualWidth)
+					{
+						this._activeScreen.width = this.actualWidth;
+					}
+					if(this._activeScreen.height != this.actualHeight)
+					{
+						this._activeScreen.height = this.actualHeight;
+					}
 				}
 			}
 
@@ -755,7 +764,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function addedToStageHandler(event:Event):void
+		protected function screenNavigator_addedToStageHandler(event:Event):void
 		{
 			this.stage.addEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
 		}
@@ -763,7 +772,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected function removedFromStageHandler(event:Event):void
+		protected function screenNavigator_removedFromStageHandler(event:Event):void
 		{
 			this.stage.removeEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
 		}

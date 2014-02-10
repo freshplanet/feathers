@@ -8,26 +8,15 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls.supportClasses
 {
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.Scroller;
-	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
-	import feathers.events.FeathersEventType;
-	import feathers.layout.ILayout;
-	import feathers.layout.ILayoutDisplayObject;
-	import feathers.layout.IVirtualLayout;
-	import feathers.layout.LayoutBoundsResult;
-	import feathers.layout.ViewPortBounds;
-
-	import flash.geom.Point;
 
 	import starling.display.DisplayObject;
-	import starling.events.Event;
 
 	/**
 	 * @private
 	 * Used internally by ScrollContainer. Not meant to be used on its own.
 	 */
-	public final class LayoutViewPort extends LayoutGroup implements IViewPort
+	public class LayoutViewPort extends LayoutGroup implements IViewPort
 	{
 		public function LayoutViewPort()
 		{
