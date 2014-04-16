@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -8,11 +8,11 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
-	import feathers.core.IFeathersControl;
 	import feathers.core.IFocusDisplayObject;
 	import feathers.core.ITextRenderer;
 	import feathers.core.IToggle;
 	import feathers.core.PropertyProxy;
+	import feathers.skins.IStyleProvider;
 	import feathers.system.DeviceCapabilities;
 
 	import flash.geom.Point;
@@ -160,6 +160,15 @@ package feathers.controls
 		public static const DEFAULT_CHILD_NAME_THUMB:String = "feathers-toggle-switch-thumb";
 
 		/**
+		 * The default <code>IStyleProvider</code> for all <code>ToggleSwitch</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var styleProvider:IStyleProvider;
+
+		/**
 		 * @private
 		 */
 		protected static function defaultThumbFactory():Button
@@ -189,6 +198,7 @@ package feathers.controls
 		public function ToggleSwitch()
 		{
 			super();
+			this._styleProvider = ToggleSwitch.styleProvider;
 			this.addEventListener(TouchEvent.TOUCH, toggleSwitch_touchHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, toggleSwitch_removedFromStageHandler);
 		}
@@ -985,6 +995,47 @@ package feathers.controls
 		/**
 		 * @private
 		 */
+		protected var _toggleThumbSelection:Boolean = false;
+
+		/**
+		 * Determines if the <code>isSelected</code> property of the thumb
+		 * is updated to match the <code>isSelected</code> property of the
+		 * toggle switch, if the class used to create the thumb implements the
+		 * <code>IToggle</code> interface. Useful for skinning to provide a
+		 * different appearance for the thumb based on whether the toggle switch
+		 * is selected or not.
+		 *
+		 * <p>In the following example, the thumb selection is toggled:</p>
+		 *
+		 * <listing version="3.0">
+		 * toggle.toggleThumbSelection = true;</listing>
+		 *
+		 * @default false
+		 *
+		 * @see feathers.core.IToggle
+		 * @see feathers.controls.ToggleButton
+		 */
+		public function get toggleThumbSelection():Boolean
+		{
+			return this._toggleThumbSelection;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set toggleThumbSelection(value:Boolean):void
+		{
+			if(this._toggleThumbSelection == value)
+			{
+				return;
+			}
+			this._toggleThumbSelection = value;
+			this.invalidate(INVALIDATION_FLAG_SELECTED);
+		}
+
+		/**
+		 * @private
+		 */
 		protected var _toggleDuration:Number = 0.15;
 
 		/**
@@ -1671,16 +1722,16 @@ package feathers.controls
 		 */
 		override protected function draw():void
 		{
-			const selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
-			const layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
-			const textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
-			const thumbFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_THUMB_FACTORY);
-			const onTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_ON_TRACK_FACTORY);
-			const offTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_OFF_TRACK_FACTORY);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var focusInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_FOCUS);
+			var layoutInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LAYOUT);
+			var textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
+			var thumbFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_THUMB_FACTORY);
+			var onTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_ON_TRACK_FACTORY);
+			var offTrackFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_OFF_TRACK_FACTORY);
 
 			if(thumbFactoryInvalid)
 			{
@@ -1732,6 +1783,11 @@ package feathers.controls
 			if((offTrackFactoryInvalid || layoutInvalid || stateInvalid) && this.offTrack)
 			{
 				this.offTrack.isEnabled = this._isEnabled;
+			}
+			if(textRendererInvalid || stateInvalid)
+			{
+				this.onTextRenderer.isEnabled = this._isEnabled;
+				this.offTextRenderer.isEnabled = this._isEnabled;
 			}
 
 			sizeInvalid = this.autoSizeIfNeeded() || sizeInvalid;
@@ -1839,7 +1895,7 @@ package feathers.controls
 			const factory:Function = this._thumbFactory != null ? this._thumbFactory : defaultThumbFactory;
 			const thumbName:String = this._customThumbName != null ? this._customThumbName : this.thumbName;
 			this.thumb = Button(factory());
-			this.thumb.nameList.add(thumbName);
+			this.thumb.styleNameList.add(thumbName);
 			this.thumb.keepDownStateOnRollOut = true;
 			this.thumb.addEventListener(TouchEvent.TOUCH, thumb_touchHandler);
 			this.addChild(this.thumb);
@@ -1867,7 +1923,7 @@ package feathers.controls
 			const factory:Function = this._onTrackFactory != null ? this._onTrackFactory : defaultOnTrackFactory;
 			const onTrackName:String = this._customOnTrackName != null ? this._customOnTrackName : this.onTrackName;
 			this.onTrack = Button(factory());
-			this.onTrack.nameList.add(onTrackName);
+			this.onTrack.styleNameList.add(onTrackName);
 			this.onTrack.keepDownStateOnRollOut = true;
 			this.addChildAt(this.onTrack, 0);
 		}
@@ -1896,7 +1952,7 @@ package feathers.controls
 				const factory:Function = this._offTrackFactory != null ? this._offTrackFactory : defaultOffTrackFactory;
 				const offTrackName:String = this._customOffTrackName != null ? this._customOffTrackName : this.offTrackName;
 				this.offTrack = Button(factory());
-				this.offTrack.nameList.add(offTrackName);
+				this.offTrack.styleNameList.add(offTrackName);
 				this.offTrack.keepDownStateOnRollOut = true;
 				this.addChildAt(this.offTrack, 1);
 			}
@@ -1934,11 +1990,8 @@ package feathers.controls
 				offLabelFactory = FeathersControl.defaultTextRendererFactory;
 			}
 			this.offTextRenderer = ITextRenderer(offLabelFactory());
-			this.offTextRenderer.nameList.add(this.offLabelName);
-			if(this.offTextRenderer is IFeathersControl)
-			{
-				FeathersControl(this.offTextRenderer).clipRect = new Rectangle();
-			}
+			this.offTextRenderer.styleNameList.add(this.offLabelName);
+			this.offTextRenderer.clipRect = new Rectangle();
 			this.addChildAt(DisplayObject(this.offTextRenderer), index);
 
 			var onLabelFactory:Function = this._onLabelFactory;
@@ -1951,11 +2004,8 @@ package feathers.controls
 				onLabelFactory = FeathersControl.defaultTextRendererFactory;
 			}
 			this.onTextRenderer = ITextRenderer(onLabelFactory());
-			this.onTextRenderer.nameList.add(this.onLabelName);
-			if(this.onTextRenderer is IFeathersControl)
-			{
-				FeathersControl(this.onTextRenderer).clipRect = new Rectangle();
-			}
+			this.onTextRenderer.styleNameList.add(this.onLabelName);
+			this.onTextRenderer.clipRect = new Rectangle();
 			this.addChildAt(DisplayObject(this.onTextRenderer), index);
 		}
 
@@ -1979,23 +2029,17 @@ package feathers.controls
 				labelHeight = Math.max(this.onTextRenderer.baseline, this.offTextRenderer.baseline);
 			}
 
-			if(this.onTextRenderer is IFeathersControl)
-			{
-				var clipRect:Rectangle = FeathersControl(this.onTextRenderer).clipRect;
-				clipRect.width = maxLabelWidth;
-				clipRect.height = totalLabelHeight;
-				FeathersControl(this.onTextRenderer).clipRect = clipRect;
-			}
+			var clipRect:Rectangle = this.onTextRenderer.clipRect;
+			clipRect.width = maxLabelWidth;
+			clipRect.height = totalLabelHeight;
+			this.onTextRenderer.clipRect = clipRect;
 
 			this.onTextRenderer.y = (this.actualHeight - labelHeight) / 2;
 
-			if(this.offTextRenderer is IFeathersControl)
-			{
-				clipRect = FeathersControl(this.offTextRenderer).clipRect;
-				clipRect.width = maxLabelWidth;
-				clipRect.height = totalLabelHeight;
-				FeathersControl(this.offTextRenderer).clipRect = clipRect;
-			}
+			clipRect = this.offTextRenderer.clipRect;
+			clipRect.width = maxLabelWidth;
+			clipRect.height = totalLabelHeight;
+			this.offTextRenderer.clipRect = clipRect;
 
 			this.offTextRenderer.y = (this.actualHeight - labelHeight) / 2;
 
@@ -2011,23 +2055,15 @@ package feathers.controls
 			const thumbOffset:Number = this.thumb.x - this._paddingLeft;
 
 			var onScrollOffset:Number = maxLabelWidth - thumbOffset - (maxLabelWidth - this.onTextRenderer.width) / 2;
-			if(this.onTextRenderer is IFeathersControl)
-			{
-				const displayOnLabelRenderer:FeathersControl = FeathersControl(this.onTextRenderer);
-				var currentClipRect:Rectangle = displayOnLabelRenderer.clipRect;
-				currentClipRect.x = onScrollOffset
-				displayOnLabelRenderer.clipRect = currentClipRect;
-			}
+			var currentClipRect:Rectangle = this.onTextRenderer.clipRect;
+			currentClipRect.x = onScrollOffset
+			this.onTextRenderer.clipRect = currentClipRect;
 			this.onTextRenderer.x = this._paddingLeft - onScrollOffset;
 
 			var offScrollOffset:Number = -thumbOffset - (maxLabelWidth - this.offTextRenderer.width) / 2;
-			if(this.offTextRenderer is IFeathersControl)
-			{
-				const displayOffLabelRenderer:FeathersControl = FeathersControl(this.offTextRenderer);
-				currentClipRect = displayOffLabelRenderer.clipRect;
-				currentClipRect.x = offScrollOffset
-				displayOffLabelRenderer.clipRect = currentClipRect;
-			}
+			currentClipRect = this.offTextRenderer.clipRect;
+			currentClipRect.x = offScrollOffset
+			this.offTextRenderer.clipRect = currentClipRect;
 			this.offTextRenderer.x = this.actualWidth - this._paddingRight - maxLabelWidth - offScrollOffset;
 
 			if(this._trackLayoutMode == TRACK_LAYOUT_MODE_ON_OFF)
@@ -2045,6 +2081,18 @@ package feathers.controls
 		 */
 		protected function updateSelection():void
 		{
+			if(this.thumb is IToggle)
+			{
+				var toggleThumb:IToggle = IToggle(this.thumb);
+				if(this._toggleThumbSelection)
+				{
+					toggleThumb.isSelected = this._isSelected;
+				}
+				else
+				{
+					toggleThumb.isSelected = false;
+				}
+			}
 			this.thumb.validate();
 
 			var xPosition:Number = this._paddingLeft;

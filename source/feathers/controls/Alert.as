@@ -1,12 +1,21 @@
+/*
+Feathers
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
+
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
+*/
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
 	import feathers.core.ITextRenderer;
+	import feathers.core.IValidating;
 	import feathers.core.PopUpManager;
 	import feathers.core.PropertyProxy;
 	import feathers.data.ListCollection;
 	import feathers.layout.VerticalLayout;
+	import feathers.skins.IStyleProvider;
 
 	import starling.display.DisplayObject;
 	import starling.events.Event;
@@ -23,6 +32,21 @@ package feathers.controls
 	 * the event object will contain the item from the <code>ButtonGroup</code>
 	 * data provider for the button that is triggered. If no button is
 	 * triggered, then the <code>data</code> property will be <code>null</code>.
+	 *
+	 * <p>The properties of the event object have the following values:</p>
+	 * <table class="innertable">
+	 * <tr><th>Property</th><th>Value</th></tr>
+	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
+	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
+	 *   event listener that handles the event. For example, if you use
+	 *   <code>myButton.addEventListener()</code> to register an event listener,
+	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
+	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
+	 *   it is not always the Object listening for the event. Use the
+	 *   <code>currentTarget</code> property to always access the Object
+	 *   listening for the event.</td></tr>
+	 * </table>
 	 *
 	 * @eventType starling.events.Event.CLOSE
 	 */
@@ -125,6 +149,15 @@ package feathers.controls
 		public static var overlayFactory:Function;
 
 		/**
+		 * The default <code>IStyleProvider</code> for all <code>Alert</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var styleProvider:IStyleProvider;
+
+		/**
 		 * The default factory that creates alerts when <code>Alert.show()</code>
 		 * is called. To use a different factory, you need to set
 		 * <code>Alert.alertFactory</code> to a <code>Function</code>
@@ -194,6 +227,7 @@ package feathers.controls
 		public function Alert()
 		{
 			super();
+			this._styleProvider = Alert.styleProvider;
 			this.headerName = DEFAULT_CHILD_NAME_HEADER;
 			this.footerName = DEFAULT_CHILD_NAME_BUTTON_GROUP;
 			this.buttonGroupFactory = defaultButtonGroupFactory;
@@ -666,9 +700,9 @@ package feathers.controls
 
 			if(this._icon)
 			{
-				if(this._icon is IFeathersControl)
+				if(this._icon is IValidating)
 				{
-					IFeathersControl(this._icon).validate();
+					IValidating(this._icon).validate();
 				}
 				this._icon.x = this._paddingLeft;
 				this._icon.y = this._topViewPortOffset + (this._viewPort.height - this._icon.height) / 2;
@@ -687,9 +721,9 @@ package feathers.controls
 				return false;
 			}
 
-			if(this._icon is IFeathersControl)
+			if(this._icon is IValidating)
 			{
-				IFeathersControl(this._icon).validate();
+				IValidating(this._icon).validate();
 			}
 
 			const oldHeaderWidth:Number = this.header.width;
@@ -822,7 +856,7 @@ package feathers.controls
 			const factory:Function = this._messageFactory != null ? this._messageFactory : FeathersControl.defaultTextRendererFactory;
 			this.messageTextRenderer = ITextRenderer(factory());
 			const uiTextRenderer:IFeathersControl = IFeathersControl(this.messageTextRenderer);
-			uiTextRenderer.nameList.add(this.messageName);
+			uiTextRenderer.styleNameList.add(this.messageName);
 			uiTextRenderer.touchable = false;
 			this.addChild(DisplayObject(this.messageTextRenderer));
 		}
@@ -869,9 +903,9 @@ package feathers.controls
 			super.calculateViewPortOffsets(forceScrollBars, useActualBounds);
 			if(this._icon)
 			{
-				if(this._icon is IFeathersControl)
+				if(this._icon is IValidating)
 				{
-					IFeathersControl(this._icon).validate();
+					IValidating(this._icon).validate();
 				}
 				if(!isNaN(this._icon.width))
 				{

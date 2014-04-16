@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -15,7 +15,6 @@ package feathers.core
 	import starling.display.DisplayObjectContainer;
 	import starling.display.Quad;
 	import starling.display.Stage;
-	import starling.events.EnterFrameEvent;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 
@@ -242,12 +241,12 @@ package feathers.core
 		public function centerPopUp(popUp:DisplayObject):void
 		{
 			var stage:Stage = this._root.stage;
-			if(popUp is IFeathersControl)
+			if(popUp is IValidating)
 			{
-				IFeathersControl(popUp).validate();
+				IValidating(popUp).validate();
 			}
-			popUp.x = (stage.stageWidth - popUp.width) / 2;
-			popUp.y = (stage.stageHeight - popUp.height) / 2;
+			popUp.x = Math.round((stage.stageWidth - popUp.width) / 2);
+			popUp.y = Math.round((stage.stageHeight - popUp.height) / 2);
 		}
 
 		/**
@@ -280,13 +279,8 @@ package feathers.core
 			var overlay:DisplayObject = DisplayObject(this._popUpToOverlay[popUp]);
 			if(overlay)
 			{
-				//this is a temporary workaround for Starling issue #131
-				this._root.stage.addEventListener(EnterFrameEvent.ENTER_FRAME, function(event:EnterFrameEvent):void
-				{
-					event.currentTarget.removeEventListener(event.type, arguments.callee);
-					overlay.removeFromParent(true);
-					delete _popUpToOverlay[popUp];
-				});
+				overlay.removeFromParent(true);
+				delete _popUpToOverlay[popUp];
 			}
 			var focusManager:IFocusManager = this._popUpToFocusManager[popUp];
 			if(focusManager)

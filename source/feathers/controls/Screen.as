@@ -1,15 +1,14 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls
 {
-	import feathers.core.FeathersControl;
-	import feathers.core.IFeathersControl;
 	import feathers.events.FeathersEventType;
+	import feathers.skins.IStyleProvider;
 	import feathers.system.DeviceCapabilities;
 	import feathers.utils.display.calculateScaleRatioToFit;
 	import feathers.utils.display.getDisplayObjectDepthFromStage;
@@ -20,7 +19,6 @@ package feathers.controls
 	import flash.ui.Keyboard;
 
 	import starling.core.Starling;
-	import starling.display.DisplayObject;
 	import starling.events.Event;
 
 	/**
@@ -59,6 +57,15 @@ package feathers.controls
 	public class Screen extends LayoutGroup implements IScreen
 	{
 		/**
+		 * The default <code>IStyleProvider</code> for all <code>Screen</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var styleProvider:IStyleProvider;
+
+		/**
 		 * Constructor.
 		 */
 		public function Screen()
@@ -66,6 +73,7 @@ package feathers.controls
 			this.addEventListener(Event.ADDED_TO_STAGE, screen_addedToStageHandler);
 			this.addEventListener(FeathersEventType.RESIZE, screen_resizeHandler);
 			super();
+			this._styleProvider = Screen.styleProvider;
 			this.originalDPI = DeviceCapabilities.dpi;
 		}
 		

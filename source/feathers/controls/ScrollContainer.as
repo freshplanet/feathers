@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -10,15 +10,28 @@ package feathers.controls
 	import feathers.controls.supportClasses.LayoutViewPort;
 	import feathers.layout.ILayout;
 	import feathers.layout.IVirtualLayout;
-
-	import starling.core.RenderSupport;
+	import feathers.skins.IStyleProvider;
 
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
-	import starling.events.Event;
 
 	/**
 	 * Dispatched when the container is scrolled.
+	 *
+	 * <p>The properties of the event object have the following values:</p>
+	 * <table class="innertable">
+	 * <tr><th>Property</th><th>Value</th></tr>
+	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
+	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
+	 *   event listener that handles the event. For example, if you use
+	 *   <code>myButton.addEventListener()</code> to register an event listener,
+	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
+	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
+	 *   it is not always the Object listening for the event. Use the
+	 *   <code>currentTarget</code> property to always access the Object
+	 *   listening for the event.</td></tr>
+	 * </table>
 	 *
 	 * @eventType starling.events.Event.SCROLL
 	 */
@@ -74,7 +87,7 @@ package feathers.controls
 		 *
 		 * <listing version="3.0">
 		 * var container:ScrollContainer = new ScrollContainer();
-		 * container.nameList.add( ScrollContainer.ALTERNATE_NAME_TOOLBAR );
+		 * container.styleNameList.add( ScrollContainer.ALTERNATE_NAME_TOOLBAR );
 		 * this.addChild( container );</listing>
 		 *
 		 * @see feathers.core.IFeathersControl#nameList
@@ -162,11 +175,35 @@ package feathers.controls
 		public static const INTERACTION_MODE_TOUCH_AND_SCROLL_BARS:String = "touchAndScrollBars";
 
 		/**
+		 * @copy feathers.controls.Scroller#DECELERATION_RATE_NORMAL
+		 *
+		 * @see feathers.controls.Scroller#decelerationRate
+		 */
+		public static const DECELERATION_RATE_NORMAL:Number = 0.998;
+
+		/**
+		 * @copy feathers.controls.Scroller#DECELERATION_RATE_FAST
+		 *
+		 * @see feathers.controls.Scroller#decelerationRate
+		 */
+		public static const DECELERATION_RATE_FAST:Number = 0.99;
+
+		/**
+		 * The default <code>IStyleProvider</code> for all <code>ScrollContainer</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var styleProvider:IStyleProvider;
+
+		/**
 		 * Constructor.
 		 */
 		public function ScrollContainer()
 		{
 			super();
+			this._styleProvider = ScrollContainer.styleProvider;
 			this.layoutViewPort = new LayoutViewPort();
 			this.viewPort = this.layoutViewPort;
 		}

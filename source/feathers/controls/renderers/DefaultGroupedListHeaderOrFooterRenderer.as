@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -10,9 +10,10 @@ package feathers.controls.renderers
 	import feathers.controls.GroupedList;
 	import feathers.controls.ImageLoader;
 	import feathers.core.FeathersControl;
-	import feathers.core.IFeathersControl;
 	import feathers.core.ITextRenderer;
+	import feathers.core.IValidating;
 	import feathers.core.PropertyProxy;
+	import feathers.skins.IStyleProvider;
 
 	import starling.display.DisplayObject;
 
@@ -91,6 +92,15 @@ package feathers.controls.renderers
 		public static const DEFAULT_CHILD_NAME_CONTENT_LABEL:String = "feathers-header-footer-renderer-content-label";
 
 		/**
+		 * The default <code>IStyleProvider</code> for all <code>DefaultGroupedListHeaderOrFooterRenderer</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 */
+		public static var styleProvider:IStyleProvider;
+
+		/**
 		 * @private
 		 */
 		protected static function defaultImageLoaderFactory():ImageLoader
@@ -99,18 +109,19 @@ package feathers.controls.renderers
 		}
 
 		/**
+		 * Constructor.
+		 */
+		public function DefaultGroupedListHeaderOrFooterRenderer()
+		{
+			this._styleProvider = DefaultGroupedListHeaderOrFooterRenderer.styleProvider;
+		}
+
+		/**
 		 * The value added to the <code>nameList</code> of the content label.
 		 *
 		 * @see feathers.core.IFeathersControl#nameList
 		 */
 		protected var contentLabelName:String = DEFAULT_CHILD_NAME_CONTENT_LABEL;
-
-		/**
-		 * Constructor.
-		 */
-		public function DefaultGroupedListHeaderOrFooterRenderer()
-		{
-		}
 
 		/**
 		 * @private
@@ -1297,9 +1308,9 @@ package feathers.controls.renderers
 			{
 				this.content.height = this.explicitHeight - this._paddingTop - this._paddingBottom;
 			}
-			if(this.content is IFeathersControl)
+			if(this.content is IValidating)
 			{
-				IFeathersControl(this.content).validate();
+				IValidating(this.content).validate();
 			}
 			var newWidth:Number = this.explicitWidth;
 			var newHeight:Number = this.explicitHeight;
@@ -1408,7 +1419,7 @@ package feathers.controls.renderers
 				{
 					const factory:Function = this._contentLabelFactory != null ? this._contentLabelFactory : FeathersControl.defaultTextRendererFactory;
 					this.contentLabel = ITextRenderer(factory());
-					FeathersControl(this.contentLabel).nameList.add(this.contentLabelName);
+					FeathersControl(this.contentLabel).styleNameList.add(this.contentLabelName);
 				}
 				this.contentLabel.text = label;
 			}

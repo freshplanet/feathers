@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -9,6 +9,7 @@ package feathers.controls.text
 {
 	import feathers.core.FeathersControl;
 	import feathers.core.ITextRenderer;
+	import feathers.skins.IStyleProvider;
 
 	import flash.display.BitmapData;
 	import flash.display.DisplayObjectContainer;
@@ -16,7 +17,6 @@ package feathers.controls.text
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.text.TextSnapshot;
 	import flash.text.engine.ContentElement;
 	import flash.text.engine.ElementFormat;
 	import flash.text.engine.FontDescription;
@@ -72,6 +72,27 @@ package feathers.controls.text
 		private static const HELPER_RECTANGLE:Rectangle = new Rectangle();
 
 		/**
+		 * @private
+		 * This is enforced by the runtime.
+		 */
+		protected static const MAX_TEXT_LINE_WIDTH:Number = 1000000;
+
+		/**
+		 * @private
+		 */
+		protected static const LINE_FEED:String = "\n";
+
+		/**
+		 * @private
+		 */
+		protected static const CARRIAGE_RETURN:String = "\r";
+
+		/**
+		 * @private
+		 */
+		protected static const FUZZY_TRUNCATION_DIFFERENCE:Number = 0.000001;
+
+		/**
 		 * The text will be positioned to the left edge.
 		 *
 		 * @see #textAlign
@@ -93,26 +114,20 @@ package feathers.controls.text
 		public static const TEXT_ALIGN_RIGHT:String = "right";
 
 		/**
-		 * @private
-		 * This is enforced by the runtime.
+		 * The default <code>IStyleProvider</code> for all <code>TextBlockTextRenderer</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
 		 */
-		protected static const MAX_TEXT_LINE_WIDTH:Number = 1000000;
-
-		/**
-		 * @private
-		 */
-		protected static const LINE_FEED:String = "\n";
-
-		/**
-		 * @private
-		 */
-		protected static const CARRIAGE_RETURN:String = "\r";
+		public static var styleProvider:IStyleProvider;
 
 		/**
 		 * Constructor.
 		 */
 		public function TextBlockTextRenderer()
 		{
+			this._styleProvider = TextBlockTextRenderer.styleProvider;
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
@@ -474,8 +489,7 @@ package feathers.controls.text
 			{
 				return 0;
 			}
-			var line:TextLine = this._textLines[0];
-			return line.getBaselinePosition(TextBaseline.ROMAN);
+			return this._textLines[0].ascent;
 		}
 
 		/**
@@ -1265,12 +1279,13 @@ package feathers.controls.text
 			{
 				return;
 			}
+			var scaleFactor:Number = Starling.contentScaleFactor;
 			HELPER_MATRIX.identity();
-			HELPER_MATRIX.scale(Starling.contentScaleFactor, Starling.contentScaleFactor);
+			HELPER_MATRIX.scale(scaleFactor, scaleFactor);
 			var totalBitmapWidth:Number = this._snapshotWidth;
 			var totalBitmapHeight:Number = this._snapshotHeight;
-			var clipWidth:Number = this.actualWidth;
-			var clipHeight:Number = this.actualHeight;
+			var clipWidth:Number = this.actualWidth * scaleFactor;
+			var clipHeight:Number = this.actualHeight * scaleFactor;
 			var xPosition:Number = 0;
 			var yPosition:Number = 0;
 			var bitmapData:BitmapData;
@@ -1309,7 +1324,7 @@ package feathers.controls.text
 					var newTexture:Texture;
 					if(!this.textSnapshot || this._needsNewTexture)
 					{
-						newTexture = Texture.fromBitmapData(bitmapData, false, false, Starling.contentScaleFactor);
+						newTexture = Texture.fromBitmapData(bitmapData, false, false, scaleFactor);
 						newTexture.root.onRestore = texture_onRestore;
 					}
 					var snapshot:Image = null;
@@ -1357,8 +1372,8 @@ package feathers.controls.text
 					{
 						this.textSnapshot = snapshot;
 					}
-					snapshot.x = xPosition;
-					snapshot.y = yPosition;
+					snapshot.x = xPosition / scaleFactor;
+					snapshot.y = yPosition / scaleFactor;
 					snapshotIndex++;
 					yPosition += currentBitmapHeight;
 					totalBitmapHeight -= currentBitmapHeight;
@@ -1369,7 +1384,7 @@ package feathers.controls.text
 				totalBitmapWidth -= currentBitmapWidth;
 				clipWidth -= currentBitmapWidth;
 				yPosition = 0;
-				clipHeight = this.actualHeight;
+				clipHeight = this.actualHeight * scaleFactor;
 				totalBitmapHeight = this._snapshotHeight;
 			}
 			while(totalBitmapWidth > 0)
@@ -1502,7 +1517,8 @@ package feathers.controls.text
 					}
 					var lineLength:int = line.rawTextLength;
 					var isTruncated:Boolean = false;
-					while(canTruncate && line.width > width)
+					var difference:Number = 0;
+					while(canTruncate && (difference = line.width - width) > FUZZY_TRUNCATION_DIFFERENCE)
 					{
 						isTruncated = true;
 						if(this._truncationOffset == 0)
@@ -1531,7 +1547,7 @@ package feathers.controls.text
 							this._textElement.text += this._text.substr(lineBreakIndex);
 						}
 						line = this.textBlock.recreateTextLine(line, null, lineWidth, 0, true);
-						if(truncatedTextLength == 0)
+						if(truncatedTextLength <= 0)
 						{
 							break;
 						}

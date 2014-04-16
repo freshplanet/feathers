@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
+Copyright 2012-2014 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -13,7 +13,13 @@ package feathers.controls
 	
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
+	import feathers.core.IValidating;
 	import feathers.events.FeathersEventType;
+	import feathers.skins.IStyleProvider;
+
+	import flash.errors.IllegalOperationError;
+	import flash.geom.Rectangle;
+	import flash.utils.getDefinitionByName;
 	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
@@ -23,6 +29,21 @@ package feathers.controls
 	/**
 	 * Dispatched when the active screen changes.
 	 *
+	 * <p>The properties of the event object have the following values:</p>
+	 * <table class="innertable">
+	 * <tr><th>Property</th><th>Value</th></tr>
+	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
+	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
+	 *   event listener that handles the event. For example, if you use
+	 *   <code>myButton.addEventListener()</code> to register an event listener,
+	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
+	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
+	 *   it is not always the Object listening for the event. Use the
+	 *   <code>currentTarget</code> property to always access the Object
+	 *   listening for the event.</td></tr>
+	 * </table>
+	 *
 	 * @eventType starling.events.Event.CHANGE
 	 */
 	[Event(name="change",type="starling.events.Event")]
@@ -31,6 +52,21 @@ package feathers.controls
 	 * Dispatched when the current screen is removed and there is no active
 	 * screen.
 	 *
+	 * <p>The properties of the event object have the following values:</p>
+	 * <table class="innertable">
+	 * <tr><th>Property</th><th>Value</th></tr>
+	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
+	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
+	 *   event listener that handles the event. For example, if you use
+	 *   <code>myButton.addEventListener()</code> to register an event listener,
+	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
+	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
+	 *   it is not always the Object listening for the event. Use the
+	 *   <code>currentTarget</code> property to always access the Object
+	 *   listening for the event.</td></tr>
+	 * </table>
+	 *
 	 * @eventType feathers.events.FeathersEventType.CLEAR
 	 */
 	[Event(name="clear",type="starling.events.Event")]
@@ -38,12 +74,42 @@ package feathers.controls
 	/**
 	 * Dispatched when the transition between screens begins.
 	 *
+	 * <p>The properties of the event object have the following values:</p>
+	 * <table class="innertable">
+	 * <tr><th>Property</th><th>Value</th></tr>
+	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
+	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
+	 *   event listener that handles the event. For example, if you use
+	 *   <code>myButton.addEventListener()</code> to register an event listener,
+	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
+	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
+	 *   it is not always the Object listening for the event. Use the
+	 *   <code>currentTarget</code> property to always access the Object
+	 *   listening for the event.</td></tr>
+	 * </table>
+	 *
 	 * @eventType feathers.events.FeathersEventType.TRANSITION_START
 	 */
 	[Event(name="transitionStart",type="starling.events.Event")]
 
 	/**
 	 * Dispatched when the transition between screens has completed.
+	 *
+	 * <p>The properties of the event object have the following values:</p>
+	 * <table class="innertable">
+	 * <tr><th>Property</th><th>Value</th></tr>
+	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
+	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
+	 *   event listener that handles the event. For example, if you use
+	 *   <code>myButton.addEventListener()</code> to register an event listener,
+	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
+	 * <tr><td><code>data</code></td><td>null</td></tr>
+	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
+	 *   it is not always the Object listening for the event. Use the
+	 *   <code>currentTarget</code> property to always access the Object
+	 *   listening for the event.</td></tr>
+	 * </table>
 	 *
 	 * @eventType feathers.events.FeathersEventType.TRANSITION_COMPLETE
 	 */
@@ -70,6 +136,11 @@ package feathers.controls
 	public class ScreenNavigator extends FeathersControl
 	{
 		/**
+		 * @private
+		 */
+		protected static var SIGNAL_TYPE:Class;
+
+		/**
 		 * The screen navigator will auto size itself to fill the entire stage.
 		 *
 		 * @see #autoSizeMode
@@ -84,9 +155,13 @@ package feathers.controls
 		public static const AUTO_SIZE_MODE_CONTENT:String = "content";
 
 		/**
-		 * @private
+		 * The default <code>IStyleProvider</code> for all <code>ScreenNavigator</code>
+		 * components.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
 		 */
-		protected static var SIGNAL_TYPE:Class;
+		public static var styleProvider:IStyleProvider;
 
 		/**
 		 * The default transition function.
@@ -103,6 +178,7 @@ package feathers.controls
 		public function ScreenNavigator()
 		{
 			super();
+			this._styleProvider = ScreenNavigator.styleProvider;
 			if(!SIGNAL_TYPE)
 			{
 				try
@@ -314,16 +390,16 @@ package feathers.controls
 				throw new IllegalOperationError("Screen with id '" + id + "' cannot be shown because it has not been defined.");
 			}
 
-			if(this._activeScreenID == id)
-			{
-				return this._activeScreen;
-			}
-
 			if(this._transitionIsActive)
 			{
 				this._nextScreenID = id;
 				this._clearAfterTransition = false;
 				return null;
+			}
+
+			if(this._activeScreenID == id)
+			{
+				return this._activeScreen;
 			}
 
 			this._previousScreenInTransition = this._activeScreen;
@@ -645,9 +721,9 @@ package feathers.controls
 			}
 
 			if(this._autoSizeMode == AUTO_SIZE_MODE_CONTENT &&
-				this._activeScreen is IFeathersControl)
+				this._activeScreen is IValidating)
 			{
-				IFeathersControl(this._activeScreen).validate();
+				IValidating(this._activeScreen).validate();
 			}
 
 			var newWidth:Number = this.explicitWidth;
