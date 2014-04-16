@@ -4806,11 +4806,6 @@ package feathers.controls
 					return;
 				}
 
-				if (_timeOfLastMouseDown > _timeOfLastFrame)
-				{
-					enterFrameHandler(null);
-				}
-
 				if(!isFinishingHorizontally && this._isDraggingHorizontally)
 				{
 					//take the average for more accuracy
