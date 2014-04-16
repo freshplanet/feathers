@@ -7,15 +7,6 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.text
 {
-	import com.freshplanet.popsdk.Pop;
-	
-	import feathers.core.FeathersControl;
-	import feathers.core.ITextEditor;
-	import feathers.events.FeathersEventType;
-	import feathers.text.StageTextField;
-	import feathers.utils.geom.matrixToScaleX;
-	import feathers.utils.geom.matrixToScaleY;
-
 	import flash.display.BitmapData;
 	import flash.events.Event;
 	import flash.events.FocusEvent;
@@ -24,6 +15,7 @@ package feathers.controls.text
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
@@ -32,7 +24,15 @@ package feathers.controls.text
 	import flash.text.engine.FontWeight;
 	import flash.ui.Keyboard;
 	import flash.utils.getDefinitionByName;
-
+	
+	import feathers.core.FeathersControl;
+	import feathers.core.ITextEditor;
+	import feathers.events.FeathersEventType;
+	import feathers.system.DeviceCapabilities;
+	import feathers.text.StageTextField;
+	import feathers.utils.geom.matrixToScaleX;
+	import feathers.utils.geom.matrixToScaleY;
+	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.display.Image;
@@ -40,8 +40,6 @@ package feathers.controls.text
 	import starling.textures.ConcreteTexture;
 	import starling.textures.Texture;
 	import starling.utils.MatrixUtil;
-	
-	import com.freshplanet.apps.hellopop.ui.assets.Assets;
 
 	/**
 	 * Dispatched when the text property changes.
@@ -1430,7 +1428,7 @@ package feathers.controls.text
 			
 			// Patch for a bug on iOS: drawViewPortToBitmapData creates a croped bitmap the first time you call
 			// it on iOS, so I call it twice - Arno
-			if(Pop.tools.isiOS()){
+			if(Capabilities.manufacturer.indexOf("iOS") > -1){
 				this.stageText.drawViewPortToBitmapData(bitmapData);
 				bitmapData = new BitmapData(viewPort.width, viewPort.height, true, 0x00ff00ff);
 			}
@@ -1512,11 +1510,11 @@ package feathers.controls.text
 			// Hack to avoid following bug with AIR 3.9:
 			// https://bugbase.adobe.com/index.cfm?event=bug&id=3648234
 			// TODO: Remove when AIR bug fixed!
-			if ( Pop.tools.isiOS7() )
+			if ( Capabilities.manufacturer.indexOf("iOS") > -1 && Capabilities.os.indexOf( "OS 7." ) > -1 )
 			{
 				stageTextViewPort.y += 2;
 				
-				if ( Assets.getContentScale() > .8 ) 	viewPortHeight -= 24;
+				if ( DeviceCapabilities.isTablet(Starling.current.nativeStage) ) 	viewPortHeight -= 24;
 				else									viewPortHeight -= 16;
 			}
 			// Hack end
