@@ -1971,5 +1971,10 @@ package feathers.core
 		{
 			this.dispatchEventWith(FeathersEventType.LAYOUT_DATA_CHANGE);
 		}
+		
+		public function invalidateData(...args):void
+		{
+			this.invalidate(INVALIDATION_FLAG_DATA);
+		}
 	}
 }
