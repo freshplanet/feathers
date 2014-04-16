@@ -7,13 +7,6 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.text
 {
-	import feathers.core.FeathersControl;
-	import feathers.core.ITextEditor;
-	import feathers.events.FeathersEventType;
-	import feathers.utils.geom.matrixToRotation;
-	import feathers.utils.geom.matrixToScaleX;
-	import feathers.utils.geom.matrixToScaleY;
-	
 	import flash.display.BitmapData;
 	import flash.events.FocusEvent;
 	import flash.events.KeyboardEvent;
@@ -26,6 +19,13 @@ package feathers.controls.text
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	import flash.ui.Keyboard;
+	
+	import feathers.core.FeathersControl;
+	import feathers.core.ITextEditor;
+	import feathers.events.FeathersEventType;
+	import feathers.utils.geom.matrixToRotation;
+	import feathers.utils.geom.matrixToScaleX;
+	import feathers.utils.geom.matrixToScaleY;
 	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
@@ -215,12 +215,26 @@ package feathers.controls.text
 		 */
 		protected var textSnapshot:Image;
 
+		protected var _measureTextField:TextField;
+
 		/**
 		 * The separate text field sub-component used for measurement.
 		 * Typically, the main text field often doesn't report correct values
 		 * for a full frame if its dimensions are changed too often.
 		 */
-		protected var measureTextField:TextField;
+		public function get measureTextField():TextField
+		{
+			return _measureTextField;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set measureTextField(value:TextField):void
+		{
+			_measureTextField = value;
+		}
+
 
 		/**
 		 * @private
