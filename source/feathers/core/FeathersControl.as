@@ -243,10 +243,10 @@ package feathers.core
 		public function FeathersControl()
 		{
 			super();
-			if(Object(this).constructor == FeathersControl)
-			{
-				throw new Error(ABSTRACT_CLASS_ERROR);
-			}
+//			if(Object(this).constructor == FeathersControl)
+//			{
+//				throw new Error(ABSTRACT_CLASS_ERROR);
+//			}
 			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
 			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
