@@ -113,7 +113,7 @@ package feathers.controls.renderers
 		 */
 		public function DefaultGroupedListHeaderOrFooterRenderer()
 		{
-			this._styleProvider = DefaultGroupedListHeaderOrFooterRenderer.styleProvider;
+			super();
 		}
 
 		/**
@@ -137,6 +137,14 @@ package feathers.controls.renderers
 		 * @private
 		 */
 		protected var content:DisplayObject;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return DefaultGroupedListHeaderOrFooterRenderer.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -832,7 +840,7 @@ package feathers.controls.renderers
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1230,9 +1238,9 @@ package feathers.controls.renderers
 		 */
 		override protected function draw():void
 		{
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
 
 			if(stylesInvalid || stateInvalid)
@@ -1285,8 +1293,8 @@ package feathers.controls.renderers
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1298,7 +1306,12 @@ package feathers.controls.renderers
 			if(this.contentLabel)
 			{
 				//special case for label to allow word wrap
-				this.contentLabel.maxWidth = (isNaN(this.explicitWidth) ? this._maxWidth : this.explicitWidth) - this._paddingLeft - this._paddingRight;
+				var labelMaxWidth:Number = this.explicitWidth;
+				if(needsWidth)
+				{
+					labelMaxWidth = this._maxWidth;
+				}
+				this.contentLabel.maxWidth = labelMaxWidth - this._paddingLeft - this._paddingRight;
 			}
 			if(this._horizontalAlign == HORIZONTAL_ALIGN_JUSTIFY)
 			{
@@ -1317,7 +1330,7 @@ package feathers.controls.renderers
 			if(needsWidth)
 			{
 				newWidth = this.content.width + this._paddingLeft + this._paddingRight;
-				if(!isNaN(this.originalBackgroundWidth))
+				if(this.originalBackgroundWidth == this.originalBackgroundWidth) //!isNaN
 				{
 					newWidth = Math.max(newWidth, this.originalBackgroundWidth);
 				}
@@ -1325,7 +1338,7 @@ package feathers.controls.renderers
 			if(needsHeight)
 			{
 				newHeight = this.content.height + this._paddingTop + this._paddingBottom;
-				if(!isNaN(this.originalBackgroundHeight))
+				if(this.originalBackgroundHeight == this.originalBackgroundHeight) //!isNaN
 				{
 					newHeight = Math.max(newHeight, this.originalBackgroundHeight);
 				}
@@ -1353,11 +1366,11 @@ package feathers.controls.renderers
 			}
 			if(this.currentBackgroundSkin)
 			{
-				if(isNaN(this.originalBackgroundWidth))
+				if(this.originalBackgroundWidth != this.originalBackgroundWidth) //isNaN
 				{
 					this.originalBackgroundWidth = this.currentBackgroundSkin.width;
 				}
-				if(isNaN(this.originalBackgroundHeight))
+				if(this.originalBackgroundHeight != this.originalBackgroundHeight) //isNaN
 				{
 					this.originalBackgroundHeight = this.currentBackgroundSkin.height;
 				}
@@ -1372,7 +1385,7 @@ package feathers.controls.renderers
 		{
 			if(this._owner)
 			{
-				const newContent:DisplayObject = this.itemToContent(this._data);
+				var newContent:DisplayObject = this.itemToContent(this._data);
 				if(newContent != this.content)
 				{
 					if(this.content)
@@ -1417,7 +1430,7 @@ package feathers.controls.renderers
 			{
 				if(!this.contentLabel)
 				{
-					const factory:Function = this._contentLabelFactory != null ? this._contentLabelFactory : FeathersControl.defaultTextRendererFactory;
+					var factory:Function = this._contentLabelFactory != null ? this._contentLabelFactory : FeathersControl.defaultTextRendererFactory;
 					this.contentLabel = ITextRenderer(factory());
 					FeathersControl(this.contentLabel).styleNameList.add(this.contentLabelName);
 				}
@@ -1439,14 +1452,10 @@ package feathers.controls.renderers
 			{
 				return;
 			}
-			const displayContentLabel:DisplayObject = DisplayObject(this.contentLabel);
 			for(var propertyName:String in this._contentLabelProperties)
 			{
-				if(displayContentLabel.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._contentLabelProperties[propertyName];
-					displayContentLabel[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._contentLabelProperties[propertyName];
+				this.contentLabel[propertyName] = propertyValue;
 			}
 		}
 

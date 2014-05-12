@@ -247,6 +247,7 @@ package feathers.core
 //			{
 //				throw new Error(ABSTRACT_CLASS_ERROR);
 //			}
+			this._styleProvider = this.defaultStyleProvider;
 			this.addEventListener(Event.ADDED_TO_STAGE, feathersControl_addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, feathersControl_removedFromStageHandler);
 			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
@@ -356,6 +357,29 @@ package feathers.core
 				throw new IllegalOperationError("The styleProvider property cannot be changed after a component is initialized.");
 			}
 			this._styleProvider = value;
+		}
+
+		/**
+		 * When the <code>FeathersControl</code> constructor is called, the
+		 * <code>styleProvider</code> property is set to this value. May be
+		 * <code>null</code>.
+		 *
+		 * <p>Typically, a subclass of <code>FeathersControl</code> will
+		 * override this function to return its static <code>styleProvider</code>
+		 * value. For instance, <code>feathers.controls.Button</code> overrides
+		 * this function, and its implementation looks like this:</p>
+		 *
+		 * <listing version="3.0">
+		 * override protected function get defaultStyleProvider():IStyleProvider
+		 * {
+		 *     return Button.styleProvider;
+		 * }</listing>
+		 *
+		 * @see #styleProvider
+		 */
+		protected function get defaultStyleProvider():IStyleProvider
+		{
+			return null;
 		}
 
 		/**
@@ -538,8 +562,8 @@ package feathers.core
 			{
 				return;
 			}
-			const valueIsNaN:Boolean = isNaN(value);
-			if(valueIsNaN && isNaN(this.explicitWidth))
+			var valueIsNaN:Boolean = value != value; //isNaN
+			if(valueIsNaN && this.explicitWidth != this.explicitWidth)
 			{
 				return;
 			}
@@ -622,8 +646,8 @@ package feathers.core
 			{
 				return;
 			}
-			const valueIsNaN:Boolean = isNaN(value);
-			if(valueIsNaN && isNaN(this.explicitHeight))
+			var valueIsNaN:Boolean = value != value; //isNaN
+			if(valueIsNaN && this.explicitHeight != this.explicitHeight)
 			{
 				return;
 			}
@@ -743,7 +767,7 @@ package feathers.core
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("minWidth cannot be NaN");
 			}
@@ -785,7 +809,7 @@ package feathers.core
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("minHeight cannot be NaN");
 			}
@@ -827,7 +851,7 @@ package feathers.core
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("maxWidth cannot be NaN");
 			}
@@ -869,7 +893,7 @@ package feathers.core
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("maxHeight cannot be NaN");
 			}
@@ -1451,7 +1475,7 @@ package feathers.core
 				{
 					return null;
 				}
-				const clipRect:Rectangle = this.clipRect;
+				var clipRect:Rectangle = this.clipRect;
 				if(clipRect && !clipRect.containsPoint(localPoint))
 				{
 					return null;
@@ -1487,7 +1511,7 @@ package feathers.core
 		 */
 		public function invalidate(flag:String = INVALIDATION_FLAG_ALL):void
 		{
-			const isAlreadyInvalid:Boolean = this.isInvalid();
+			var isAlreadyInvalid:Boolean = this.isInvalid();
 			var isAlreadyDelayedInvalid:Boolean = false;
 			if(this._isValidating)
 			{
@@ -1629,13 +1653,13 @@ package feathers.core
 		public function setSize(width:Number, height:Number):void
 		{
 			this.explicitWidth = width;
-			var widthIsNaN:Boolean = isNaN(width);
+			var widthIsNaN:Boolean = width != width;
 			if(widthIsNaN)
 			{
 				this.actualWidth = 0;
 			}
 			this.explicitHeight = height;
-			var heightIsNaN:Boolean = isNaN(height);
+			var heightIsNaN:Boolean = height != height;
 			if(heightIsNaN)
 			{
 				this.actualHeight = 0;
@@ -1687,7 +1711,7 @@ package feathers.core
 		 */
 		protected function setSizeInternal(width:Number, height:Number, canInvalidate:Boolean):Boolean
 		{
-			if(!isNaN(this.explicitWidth))
+			if(this.explicitWidth == this.explicitWidth) //!isNaN
 			{
 				width = this.explicitWidth;
 			}
@@ -1702,7 +1726,7 @@ package feathers.core
 					width = this._maxWidth;
 				}
 			}
-			if(!isNaN(this.explicitHeight))
+			if(this.explicitHeight == this.explicitHeight) //!isNaN
 			{
 				height = this.explicitHeight;
 			}
@@ -1717,11 +1741,11 @@ package feathers.core
 					height = this._maxHeight;
 				}
 			}
-			if(isNaN(width))
+			if(width != width) //isNaN
 			{
 				throw new ArgumentError(ILLEGAL_WIDTH_ERROR);
 			}
-			if(isNaN(height))
+			if(height != height) //isNaN
 			{
 				throw new ArgumentError(ILLEGAL_HEIGHT_ERROR);
 			}

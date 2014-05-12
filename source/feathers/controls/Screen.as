@@ -73,8 +73,15 @@ package feathers.controls
 			this.addEventListener(Event.ADDED_TO_STAGE, screen_addedToStageHandler);
 			this.addEventListener(FeathersEventType.RESIZE, screen_resizeHandler);
 			super();
-			this._styleProvider = Screen.styleProvider;
 			this.originalDPI = DeviceCapabilities.dpi;
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Screen.styleProvider;
 		}
 		
 		/**
@@ -353,7 +360,7 @@ package feathers.controls
 			{
 				return;
 			}
-			const loaderInfo:LoaderInfo = DisplayObjectContainer(Starling.current.nativeStage.root).getChildAt(0).loaderInfo;
+			var loaderInfo:LoaderInfo = DisplayObjectContainer(Starling.current.nativeStage.root).getChildAt(0).loaderInfo;
 			//if originalWidth or originalHeight is NaN, it's because the Screen
 			//has been added to the display list, and we really need values now.
 			if(isNaN(this._originalWidth))

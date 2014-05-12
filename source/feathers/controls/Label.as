@@ -87,7 +87,7 @@ package feathers.controls
 		 */
 		public function Label()
 		{
-			this._styleProvider = Label.styleProvider;
+			super();
 			this.isQuickHitAreaEnabled = true;
 		}
 
@@ -98,6 +98,14 @@ package feathers.controls
 		 * @see #textRendererFactory
 		 */
 		protected var textRenderer:ITextRenderer;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Label.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -272,11 +280,11 @@ package feathers.controls
 		 */
 		override protected function draw():void
 		{
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
 
 			if(textRendererInvalid)
 			{
@@ -321,8 +329,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = isNaN(this.explicitWidth);
+			var needsHeight:Boolean = isNaN(this.explicitHeight);
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -381,7 +389,7 @@ package feathers.controls
 				this.textRenderer = null;
 			}
 
-			const factory:Function = this._textRendererFactory != null ? this._textRendererFactory : FeathersControl.defaultTextRendererFactory;
+			var factory:Function = this._textRendererFactory != null ? this._textRendererFactory : FeathersControl.defaultTextRendererFactory;
 			this.textRenderer = ITextRenderer(factory());
 			this.addChild(DisplayObject(this.textRenderer));
 		}
@@ -408,14 +416,10 @@ package feathers.controls
 		 */
 		protected function refreshTextRendererStyles():void
 		{
-			const displayTextRenderer:DisplayObject = DisplayObject(this.textRenderer);
 			for(var propertyName:String in this._textRendererProperties)
 			{
-				if(displayTextRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._textRendererProperties[propertyName];
-					displayTextRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._textRendererProperties[propertyName];
+				this.textRenderer[propertyName] = propertyValue;
 			}
 		}
 

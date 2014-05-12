@@ -180,7 +180,14 @@ package feathers.controls.renderers
 		public function DefaultGroupedListItemRenderer()
 		{
 			super();
-			this._styleProvider = DefaultGroupedListItemRenderer.styleProvider;
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return DefaultGroupedListItemRenderer.styleProvider;
 		}
 		
 		/**
@@ -271,7 +278,7 @@ package feathers.controls.renderers
 			this._owner = value;
 			if(this._owner)
 			{
-				const list:GroupedList = GroupedList(this._owner);
+				var list:GroupedList = GroupedList(this._owner);
 				this.isSelectableWithoutToggle = list.isSelectable;
 				this._owner.addEventListener(FeathersEventType.SCROLL_START, owner_scrollStartHandler);
 				this._owner.addEventListener(FeathersEventType.SCROLL_COMPLETE, owner_scrollCompleteHandler);

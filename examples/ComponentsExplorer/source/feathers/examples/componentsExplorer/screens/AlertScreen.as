@@ -18,20 +18,23 @@ package feathers.examples.componentsExplorer.screens
 	{
 		public function AlertScreen()
 		{
-			this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+			super();
 		}
 
 		private var _backButton:Button;
 		private var _showAlertButton:Button;
 
-		protected function initializeHandler(event:Event):void
+		override protected function initialize():void
 		{
+			//never forget to call super.initialize()
+			super.initialize();
+
 			this.layout = new AnchorLayout();
 
 			this._showAlertButton = new Button();
 			this._showAlertButton.label = "Show Alert";
 			this._showAlertButton.addEventListener(Event.TRIGGERED, showAlertButton_triggeredHandler);
-			const buttonGroupLayoutData:AnchorLayoutData = new AnchorLayoutData();
+			var buttonGroupLayoutData:AnchorLayoutData = new AnchorLayoutData();
 			buttonGroupLayoutData.horizontalCenter = 0;
 			buttonGroupLayoutData.verticalCenter = 0;
 			this._showAlertButton.layoutData = buttonGroupLayoutData;

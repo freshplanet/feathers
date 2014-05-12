@@ -70,7 +70,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("minVisibleWidth cannot be NaN");
 			}
@@ -91,7 +91,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("maxVisibleWidth cannot be NaN");
 			}
@@ -110,7 +110,8 @@ package feathers.controls.supportClasses
 
 		public function set visibleWidth(value:Number):void
 		{
-			if(this.explicitVisibleWidth == value || (isNaN(value) && isNaN(this.explicitVisibleWidth)))
+			if(this.explicitVisibleWidth == value ||
+				(value != value && this.explicitVisibleWidth != this.explicitVisibleWidth)) //isNaN
 			{
 				return;
 			}
@@ -131,7 +132,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("minVisibleHeight cannot be NaN");
 			}
@@ -152,7 +153,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("maxVisibleHeight cannot be NaN");
 			}
@@ -171,7 +172,8 @@ package feathers.controls.supportClasses
 
 		public function set visibleHeight(value:Number):void
 		{
-			if(this.explicitVisibleHeight == value || (isNaN(value) && isNaN(this.explicitVisibleHeight)))
+			if(this.explicitVisibleHeight == value ||
+				(value != value && this.explicitVisibleHeight != this.explicitVisibleHeight)) //isNaN
 			{
 				return;
 			}
@@ -824,7 +826,7 @@ package feathers.controls.supportClasses
 			{
 				if(this._layout is IVariableVirtualLayout)
 				{
-					const variableVirtualLayout:IVariableVirtualLayout = IVariableVirtualLayout(this._layout)
+					var variableVirtualLayout:IVariableVirtualLayout = IVariableVirtualLayout(this._layout)
 					variableVirtualLayout.hasVariableItemDimensions = true;
 					variableVirtualLayout.resetVariableVirtualCache();
 				}
@@ -899,7 +901,7 @@ package feathers.controls.supportClasses
 				result = new Point();
 			}
 
-			const displayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
+			var displayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
 			return this._layout.getScrollPositionForIndex(displayIndex, this._layoutItems, 0, 0, this.actualVisibleWidth, this.actualVisibleHeight, result);
 		}
 
@@ -1110,8 +1112,8 @@ package feathers.controls.supportClasses
 				return;
 			}
 
-			const hasCustomFirstItemRenderer:Boolean = this._firstItemRendererType || this._firstItemRendererFactory != null || this._firstItemRendererName;
-			const hasCustomSingleItemRenderer:Boolean = this._singleItemRendererType || this._singleItemRendererFactory != null || this._singleItemRendererName;
+			var hasCustomFirstItemRenderer:Boolean = this._firstItemRendererType || this._firstItemRendererFactory != null || this._firstItemRendererName;
+			var hasCustomSingleItemRenderer:Boolean = this._singleItemRendererType || this._singleItemRendererFactory != null || this._singleItemRendererName;
 
 			var newTypicalItemIsInDataProvider:Boolean = false;
 			var typicalItem:Object = this._typicalItem;
@@ -1274,40 +1276,31 @@ package feathers.controls.supportClasses
 
 		private function refreshOneItemRendererStyles(renderer:IGroupedListItemRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
+			var displayRenderer:DisplayObject = DisplayObject(renderer);
 			for(var propertyName:String in this._itemRendererProperties)
 			{
-				if(displayRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._itemRendererProperties[propertyName];
-					displayRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._itemRendererProperties[propertyName];
+				displayRenderer[propertyName] = propertyValue;
 			}
 		}
 
 		private function refreshOneHeaderRendererStyles(renderer:IGroupedListHeaderOrFooterRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
+			var displayRenderer:DisplayObject = DisplayObject(renderer);
 			for(var propertyName:String in this._headerRendererProperties)
 			{
-				if(displayRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._headerRendererProperties[propertyName];
-					displayRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._headerRendererProperties[propertyName];
+				displayRenderer[propertyName] = propertyValue;
 			}
 		}
 
 		private function refreshOneFooterRendererStyles(renderer:IGroupedListHeaderOrFooterRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
+			var displayRenderer:DisplayObject = DisplayObject(renderer);
 			for(var propertyName:String in this._footerRendererProperties)
 			{
-				if(displayRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._footerRendererProperties[propertyName];
-					displayRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._footerRendererProperties[propertyName];
+				displayRenderer[propertyName] = propertyValue;
 			}
 		}
 
@@ -1446,7 +1439,7 @@ package feathers.controls.supportClasses
 			this._headerIndices.length = 0;
 			this._footerIndices.length = 0;
 
-			const hasCustomFirstItemRenderer:Boolean = this._firstItemRendererType || this._firstItemRendererFactory != null || this._firstItemRendererName;
+			var hasCustomFirstItemRenderer:Boolean = this._firstItemRendererType || this._firstItemRendererFactory != null || this._firstItemRendererName;
 			if(hasCustomFirstItemRenderer)
 			{
 				if(!this._firstItemRendererMap)
@@ -1473,7 +1466,7 @@ package feathers.controls.supportClasses
 				this._activeFirstItemRenderers = null;
 				this._unrenderedFirstItems = null;
 			}
-			const hasCustomLastItemRenderer:Boolean = this._lastItemRendererType || this._lastItemRendererFactory != null || this._lastItemRendererName;
+			var hasCustomLastItemRenderer:Boolean = this._lastItemRendererType || this._lastItemRendererFactory != null || this._lastItemRendererName;
 			if(hasCustomLastItemRenderer)
 			{
 				if(!this._lastItemRendererMap)
@@ -1500,7 +1493,7 @@ package feathers.controls.supportClasses
 				this._activeLastItemRenderers = null;
 				this._unrenderedLastItems = null;
 			}
-			const hasCustomSingleItemRenderer:Boolean = this._singleItemRendererType || this._singleItemRendererFactory != null || this._singleItemRendererName;
+			var hasCustomSingleItemRenderer:Boolean = this._singleItemRendererType || this._singleItemRendererFactory != null || this._singleItemRendererName;
 			if(hasCustomSingleItemRenderer)
 			{
 				if(!this._singleItemRendererMap)
@@ -1596,7 +1589,7 @@ package feathers.controls.supportClasses
 
 		private function findUnrenderedData():void
 		{
-			const groupCount:int = this._dataProvider ? this._dataProvider.getLength() : 0;
+			var groupCount:int = this._dataProvider ? this._dataProvider.getLength() : 0;
 			var totalLayoutCount:int = 0;
 			var totalHeaderCount:int = 0;
 			var totalFooterCount:int = 0;
@@ -1626,8 +1619,8 @@ package feathers.controls.supportClasses
 				}
 			}
 			this._layoutItems.length = totalLayoutCount;
-			const virtualLayout:IVirtualLayout = this._layout as IVirtualLayout;
-			const useVirtualLayout:Boolean = virtualLayout && virtualLayout.useVirtualLayout;
+			var virtualLayout:IVirtualLayout = this._layout as IVirtualLayout;
+			var useVirtualLayout:Boolean = virtualLayout && virtualLayout.useVirtualLayout;
 			if(useVirtualLayout)
 			{
 				virtualLayout.measureViewPort(totalLayoutCount, this._viewPortBounds, HELPER_POINT);
@@ -1667,9 +1660,9 @@ package feathers.controls.supportClasses
 					this._minimumItemCount = 1;
 				}
 			}
-			const hasCustomFirstItemRenderer:Boolean = this._firstItemRendererType || this._firstItemRendererFactory != null || this._firstItemRendererName;
-			const hasCustomLastItemRenderer:Boolean = this._lastItemRendererType || this._lastItemRendererFactory != null || this._lastItemRendererName;
-			const hasCustomSingleItemRenderer:Boolean = this._singleItemRendererType || this._singleItemRendererFactory != null || this._singleItemRendererName;
+			var hasCustomFirstItemRenderer:Boolean = this._firstItemRendererType || this._firstItemRendererFactory != null || this._firstItemRendererName;
+			var hasCustomLastItemRenderer:Boolean = this._lastItemRendererType || this._lastItemRendererFactory != null || this._lastItemRendererName;
+			var hasCustomSingleItemRenderer:Boolean = this._singleItemRendererType || this._singleItemRendererFactory != null || this._singleItemRendererName;
 			var currentIndex:int = 0;
 			var unrenderedHeadersLastIndex:int = this._unrenderedHeaders.length;
 			var unrenderedFootersLastIndex:int = this._unrenderedFooters.length;
@@ -2316,7 +2309,7 @@ package feathers.controls.supportClasses
 				return -1;
 			}
 			var displayIndex:int = 0;
-			const groupCount:int = this._dataProvider.getLength();
+			var groupCount:int = this._dataProvider.getLength();
 			for(var i:int = 0; i < groupCount; i++)
 			{
 				group = this._dataProvider.getItemAt(i);
@@ -2352,7 +2345,7 @@ package feathers.controls.supportClasses
 				return -1;
 			}
 			var displayIndex:int = 0;
-			const groupCount:int = this._dataProvider.getLength();
+			var groupCount:int = this._dataProvider.getLength();
 			for(var i:int = 0; i < groupCount; i++)
 			{
 				group = this._dataProvider.getItemAt(i);
@@ -2382,7 +2375,7 @@ package feathers.controls.supportClasses
 		private function locationToDisplayIndex(groupIndex:int, itemIndex:int):int
 		{
 			var displayIndex:int = 0;
-			const groupCount:int = this._dataProvider.getLength();
+			var groupCount:int = this._dataProvider.getLength();
 			for(var i:int = 0; i < groupCount; i++)
 			{
 				var group:Object = this._dataProvider.getItemAt(i);
@@ -2460,21 +2453,21 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_addItemHandler(event:Event, indices:Array):void
 		{
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
 			}
-			const groupIndex:int = indices[0] as int;
+			var groupIndex:int = indices[0] as int;
 			if(indices.length > 1) //adding an item
 			{
-				const itemIndex:int = indices[1] as int;
-				const itemDisplayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
+				var itemIndex:int = indices[1] as int;
+				var itemDisplayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
 				layout.addToVariableVirtualCacheAtIndex(itemDisplayIndex);
 			}
 			else //adding a whole group
 			{
-				const headerDisplayIndex:int = this.groupToHeaderDisplayIndex(groupIndex);
+				var headerDisplayIndex:int = this.groupToHeaderDisplayIndex(groupIndex);
 				if(headerDisplayIndex >= 0)
 				{
 					layout.addToVariableVirtualCacheAtIndex(headerDisplayIndex);
@@ -2493,7 +2486,7 @@ package feathers.controls.supportClasses
 						layout.addToVariableVirtualCacheAtIndex(displayIndex);
 					}
 				}
-				const footerDisplayIndex:int = this.groupToFooterDisplayIndex(groupIndex);
+				var footerDisplayIndex:int = this.groupToFooterDisplayIndex(groupIndex);
 				if(footerDisplayIndex >= 0)
 				{
 					layout.addToVariableVirtualCacheAtIndex(footerDisplayIndex);
@@ -2503,16 +2496,16 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_removeItemHandler(event:Event, indices:Array):void
 		{
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
 			}
-			const groupIndex:int = indices[0] as int;
+			var groupIndex:int = indices[0] as int;
 			if(indices.length > 1) //removing an item
 			{
-				const itemIndex:int = indices[1] as int;
-				const displayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
+				var itemIndex:int = indices[1] as int;
+				var displayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
 				layout.removeFromVariableVirtualCacheAtIndex(displayIndex);
 			}
 			else //removing a whole group
@@ -2525,16 +2518,16 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_replaceItemHandler(event:Event, indices:Array):void
 		{
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
 			}
-			const groupIndex:int = indices[0] as int;
+			var groupIndex:int = indices[0] as int;
 			if(indices.length > 1) //replacing an item
 			{
-				const itemIndex:int = indices[1] as int;
-				const displayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
+				var itemIndex:int = indices[1] as int;
+				var displayIndex:int = this.locationToDisplayIndex(groupIndex, itemIndex);
 				layout.resetVariableVirtualCacheAtIndex(displayIndex);
 			}
 			else //replacing a whole group
@@ -2547,7 +2540,7 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_resetHandler(event:Event):void
 		{
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
@@ -2610,7 +2603,7 @@ package feathers.controls.supportClasses
 				//we need to invalidate because the group may have more or fewer items
 				this.invalidate(INVALIDATION_FLAG_DATA);
 
-				const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+				var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 				if(!layout || !layout.hasVariableItemDimensions)
 				{
 					return;
@@ -2637,12 +2630,12 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
 			}
-			const renderer:IGroupedListItemRenderer = IGroupedListItemRenderer(event.currentTarget);
+			var renderer:IGroupedListItemRenderer = IGroupedListItemRenderer(event.currentTarget);
 			if(renderer.layoutIndex < 0)
 			{
 				return;
@@ -2658,12 +2651,12 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
 			}
-			const renderer:IGroupedListHeaderOrFooterRenderer = IGroupedListHeaderOrFooterRenderer(event.currentTarget);
+			var renderer:IGroupedListHeaderOrFooterRenderer = IGroupedListHeaderOrFooterRenderer(event.currentTarget);
 			if(renderer.layoutIndex < 0)
 			{
 				return;

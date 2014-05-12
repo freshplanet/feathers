@@ -187,7 +187,6 @@ package feathers.controls
 		public function Header()
 		{
 			super();
-			this._styleProvider = Header.styleProvider;
 			this.addEventListener(Event.ADDED_TO_STAGE, header_addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, header_removedFromStageHandler);
 		}
@@ -227,6 +226,14 @@ package feathers.controls
 		 * The layout algorithm. Shared by both sides.
 		 */
 		protected var _layout:HorizontalLayout;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Header.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -1107,13 +1114,13 @@ package feathers.controls
 		override protected function draw():void
 		{
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const leftContentInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LEFT_CONTENT);
-			const rightContentInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_RIGHT_CONTENT);
-			const centerContentInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_CENTER_CONTENT);
-			const textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var leftContentInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_LEFT_CONTENT);
+			var rightContentInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_RIGHT_CONTENT);
+			var centerContentInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_CENTER_CONTENT);
+			var textRendererInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TEXT_RENDERER);
 
 			if(textRendererInvalid)
 			{
@@ -1234,8 +1241,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = isNaN(this.explicitWidth);
+			var needsHeight:Boolean = isNaN(this.explicitHeight);
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1244,7 +1251,7 @@ package feathers.controls
 			var newHeight:Number = needsHeight ? 0 : this.explicitHeight;
 
 			var totalItemWidth:Number = 0;
-			const leftItemCount:int = this._leftItems ? this._leftItems.length : 0;
+			var leftItemCount:int = this._leftItems ? this._leftItems.length : 0;
 			for(var i:int = 0; i < leftItemCount; i++)
 			{
 				var item:DisplayObject = this._leftItems[i];
@@ -1269,7 +1276,7 @@ package feathers.controls
 					}
 				}
 			}
-			const centerItemCount:int = this._centerItems ? this._centerItems.length : 0;
+			var centerItemCount:int = this._centerItems ? this._centerItems.length : 0;
 			for(i = 0; i < centerItemCount; i++)
 			{
 				item = this._centerItems[i];
@@ -1294,7 +1301,7 @@ package feathers.controls
 					}
 				}
 			}
-			const rightItemCount:int = this._rightItems ? this._rightItems.length : 0;
+			var rightItemCount:int = this._rightItems ? this._rightItems.length : 0;
 			for(i = 0; i < rightItemCount; i++)
 			{
 				item = this._rightItems[i];
@@ -1323,7 +1330,7 @@ package feathers.controls
 
 			if(this._title && !(this._titleAlign == TITLE_ALIGN_CENTER && this._centerItems))
 			{
-				const calculatedTitleGap:Number = isNaN(this._titleGap) ? this._gap : this._titleGap;
+				var calculatedTitleGap:Number = isNaN(this._titleGap) ? this._gap : this._titleGap;
 				newWidth += 2 * calculatedTitleGap;
 				var maxTitleWidth:Number = (needsWidth ? this._maxWidth : this.explicitWidth) - totalItemWidth;
 				if(leftItemCount > 0)
@@ -1340,8 +1347,8 @@ package feathers.controls
 				}
 				this.titleTextRenderer.maxWidth = maxTitleWidth;
 				this.titleTextRenderer.measureText(HELPER_POINT);
-				const measuredTitleWidth:Number = HELPER_POINT.x;
-				const measuredTitleHeight:Number = HELPER_POINT.y;
+				var measuredTitleWidth:Number = HELPER_POINT.x;
+				var measuredTitleHeight:Number = HELPER_POINT.y;
 				if(needsWidth && !isNaN(measuredTitleWidth))
 				{
 					newWidth += measuredTitleWidth;
@@ -1413,9 +1420,9 @@ package feathers.controls
 				this.titleTextRenderer = null;
 			}
 
-			const factory:Function = this._titleFactory != null ? this._titleFactory : FeathersControl.defaultTextRendererFactory;
+			var factory:Function = this._titleFactory != null ? this._titleFactory : FeathersControl.defaultTextRendererFactory;
 			this.titleTextRenderer = ITextRenderer(factory());
-			const uiTitleRenderer:IFeathersControl = IFeathersControl(this.titleTextRenderer);
+			var uiTitleRenderer:IFeathersControl = IFeathersControl(this.titleTextRenderer);
 			uiTitleRenderer.styleNameList.add(this.titleName);
 			uiTitleRenderer.touchable = false;
 			this.addChild(DisplayObject(uiTitleRenderer));
@@ -1470,14 +1477,10 @@ package feathers.controls
 		 */
 		protected function refreshTitleStyles():void
 		{
-			const displayTitleRenderer:DisplayObject = DisplayObject(this.titleTextRenderer);
 			for(var propertyName:String in this._titleProperties)
 			{
-				if(displayTitleRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._titleProperties[propertyName];
-					displayTitleRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._titleProperties[propertyName];
+				this.titleTextRenderer[propertyName] = propertyValue;
 			}
 		}
 
@@ -1608,10 +1611,10 @@ package feathers.controls
 				return;
 			}
 			this.titleTextRenderer.visible = true;
-			const calculatedTitleGap:Number = isNaN(this._titleGap) ? this._gap : this._titleGap;
+			var calculatedTitleGap:Number = isNaN(this._titleGap) ? this._gap : this._titleGap;
 			//left and right offsets already include padding
-			const leftOffset:Number = (this._leftItems && this._leftItems.length > 0) ? (this.leftItemsWidth + calculatedTitleGap) : 0;
-			const rightOffset:Number = (this._rightItems && this._rightItems.length > 0) ? (this.rightItemsWidth + calculatedTitleGap) : 0;
+			var leftOffset:Number = (this._leftItems && this._leftItems.length > 0) ? (this.leftItemsWidth + calculatedTitleGap) : 0;
+			var rightOffset:Number = (this._rightItems && this._rightItems.length > 0) ? (this.rightItemsWidth + calculatedTitleGap) : 0;
 			if(this._titleAlign == TITLE_ALIGN_PREFER_LEFT && (!this._leftItems || this._leftItems.length == 0))
 			{
 				this.titleTextRenderer.maxWidth = this.actualWidth - this._paddingLeft - rightOffset;
@@ -1626,11 +1629,11 @@ package feathers.controls
 			}
 			else
 			{
-				const actualWidthMinusPadding:Number = this.actualWidth - this._paddingLeft - this._paddingRight;
-				const actualWidthMinusOffsets:Number = this.actualWidth - leftOffset - rightOffset;
+				var actualWidthMinusPadding:Number = this.actualWidth - this._paddingLeft - this._paddingRight;
+				var actualWidthMinusOffsets:Number = this.actualWidth - leftOffset - rightOffset;
 				this.titleTextRenderer.maxWidth = actualWidthMinusOffsets;
 				this.titleTextRenderer.validate();
-				const idealTitlePosition:Number = this._paddingLeft + (actualWidthMinusPadding - this.titleTextRenderer.width) / 2;
+				var idealTitlePosition:Number = this._paddingLeft + (actualWidthMinusPadding - this.titleTextRenderer.width) / 2;
 				if(leftOffset > idealTitlePosition ||
 					(idealTitlePosition + this.titleTextRenderer.width) > (this.actualWidth - rightOffset))
 				{

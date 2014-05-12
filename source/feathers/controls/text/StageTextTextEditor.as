@@ -960,7 +960,7 @@ package feathers.controls.text
 			HELPER_POINT.x = HELPER_POINT.y = 0;
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
 			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
-			const starlingViewPort:Rectangle = Starling.current.viewPort;
+			var starlingViewPort:Rectangle = Starling.current.viewPort;
 			var stageTextViewPort:Rectangle = this.stageText.viewPort;
 			if(!stageTextViewPort)
 			{
@@ -1009,8 +1009,8 @@ package feathers.controls.text
 			{
 				if(position)
 				{
-					const positionX:Number = position.x;
-					const positionY:Number = position.y;
+					var positionX:Number = position.x;
+					var positionY:Number = position.y;
 					if(positionX < 0)
 					{
 						this._pendingSelectionStartIndex = this._pendingSelectionEndIndex = 0;
@@ -1022,7 +1022,7 @@ package feathers.controls.text
 						{
 							if(this._multiline)
 							{
-								const lineIndex:int = int(positionY / this._measureTextField.getLineMetrics(0).height);
+								var lineIndex:int = int(positionY / this._measureTextField.getLineMetrics(0).height);
 								try
 								{
 									this._pendingSelectionStartIndex = this._measureTextField.getLineOffset(lineIndex) + this._measureTextField.getLineLength(lineIndex);
@@ -1045,8 +1045,8 @@ package feathers.controls.text
 						}
 						else
 						{
-							const bounds:Rectangle = this._measureTextField.getCharBoundaries(this._pendingSelectionStartIndex);
-							const boundsX:Number = bounds.x;
+							var bounds:Rectangle = this._measureTextField.getCharBoundaries(this._pendingSelectionStartIndex);
+							var boundsX:Number = bounds.x;
 							if(bounds && (boundsX + bounds.width - positionX) < (positionX - boundsX))
 							{
 								this._pendingSelectionStartIndex++;
@@ -1118,8 +1118,8 @@ package feathers.controls.text
 				return result;
 			}
 
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				result.x = this.explicitWidth;
@@ -1128,8 +1128,8 @@ package feathers.controls.text
 			}
 
 
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
 
 			if(stylesInvalid || dataInvalid)
 			{
@@ -1160,16 +1160,16 @@ package feathers.controls.text
 		 */
 		protected function commit():void
 		{
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
 
 			if(stylesInvalid || dataInvalid)
 			{
 				this.refreshMeasureProperties();
 			}
 
-			const oldIgnoreStageTextChanges:Boolean = this._ignoreStageTextChanges;
+			var oldIgnoreStageTextChanges:Boolean = this._ignoreStageTextChanges;
 			this._ignoreStageTextChanges = true;
 			if(stylesInvalid)
 			{
@@ -1206,8 +1206,8 @@ package feathers.controls.text
 				result = new Point();
 			}
 
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 
 			this._measureTextField.autoSize = TextFieldAutoSize.LEFT;
 
@@ -1242,23 +1242,23 @@ package feathers.controls.text
 		 */
 		protected function layout(sizeInvalid:Boolean):void
 		{
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const positionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_POSITION);
-			const skinInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SKIN);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var positionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_POSITION);
+			var skinInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SKIN);
 
 			if(positionInvalid || sizeInvalid || stylesInvalid || skinInvalid || stateInvalid)
 			{
 				this.refreshViewPort();
-				const viewPort:Rectangle = this.stageText.viewPort;
-				const textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
+				var viewPort:Rectangle = this.stageText.viewPort;
+				var textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
 				this._needsNewTexture = this._needsNewTexture || !this.textSnapshot || viewPort.width != textureRoot.width || viewPort.height != textureRoot.height;
 			}
 
 			if(!this._stageTextHasFocus && (stylesInvalid || dataInvalid || sizeInvalid || this._needsNewTexture))
 			{
-				const hasText:Boolean = this._text.length > 0;
+				var hasText:Boolean = this._text.length > 0;
 				if(hasText)
 				{
 					this.refreshSnapshot();
@@ -1292,8 +1292,8 @@ package feathers.controls.text
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1313,7 +1313,7 @@ package feathers.controls.text
 			this._measureTextField.restrict = this._restrict;
 			this._measureTextField.multiline = this._measureTextField.wordWrap = this._multiline;
 
-			const format:TextFormat = this._measureTextField.defaultTextFormat;
+			var format:TextFormat = this._measureTextField.defaultTextFormat;
 			format.color = this._color;
 			format.font = this._fontFamily;
 			format.italic = this._fontPosture == FontPosture.ITALIC;
@@ -1395,8 +1395,8 @@ package feathers.controls.text
 			}
 			if(this._pendingSelectionStartIndex >= 0)
 			{
-				const startIndex:int = this._pendingSelectionStartIndex;
-				const endIndex:int = (this._pendingSelectionEndIndex < 0) ? this._pendingSelectionStartIndex : this._pendingSelectionEndIndex;
+				var startIndex:int = this._pendingSelectionStartIndex;
+				var endIndex:int = (this._pendingSelectionEndIndex < 0) ? this._pendingSelectionStartIndex : this._pendingSelectionEndIndex;
 				this._pendingSelectionStartIndex = -1;
 				this._pendingSelectionEndIndex = -1;
 				this.selectRange(startIndex, endIndex);
@@ -1416,7 +1416,7 @@ package feathers.controls.text
 		 */
 		protected function refreshSnapshot():void
 		{
-			const viewPort:Rectangle = this.stageText.viewPort;
+			var viewPort:Rectangle = this.stageText.viewPort;
 			if(viewPort.width == 0 || viewPort.height == 0)
 			{
 				return;
@@ -1456,7 +1456,7 @@ package feathers.controls.text
 				else
 				{
 					//this is faster, if we haven't resized the bitmapdata
-					const existingTexture:Texture = this.textSnapshot.texture;
+					var existingTexture:Texture = this.textSnapshot.texture;
 					existingTexture.root.uploadBitmapData(bitmapData);
 				}
 			}
@@ -1472,7 +1472,7 @@ package feathers.controls.text
 		 */
 		protected function refreshViewPort():void
 		{
-			const starlingViewPort:Rectangle = Starling.current.viewPort;
+			var starlingViewPort:Rectangle = Starling.current.viewPort;
 			var stageTextViewPort:Rectangle = this.stageText.viewPort;
 			if(!stageTextViewPort)
 			{
@@ -1497,12 +1497,14 @@ package feathers.controls.text
 			stageTextViewPort.x = Math.round(starlingViewPort.x + HELPER_POINT.x * scaleFactor);
 			stageTextViewPort.y = Math.round(starlingViewPort.y + HELPER_POINT.y * scaleFactor);
 			var viewPortWidth:Number = Math.round(this.actualWidth * scaleFactor * globalScaleX);
-			if(viewPortWidth < 1 || isNaN(viewPortWidth))
+			if(viewPortWidth < 1 ||
+				viewPortWidth != viewPortWidth) //isNaN
 			{
 				viewPortWidth = 1;
 			}
 			var viewPortHeight:Number = Math.round(this.actualHeight * scaleFactor * globalScaleY);
-			if(viewPortHeight < 1 || isNaN(viewPortHeight))
+			if(viewPortHeight < 1 ||
+				viewPortHeight != viewPortHeight) //isNaN
 			{
 				viewPortHeight = 1;
 			}
@@ -1589,7 +1591,7 @@ package feathers.controls.text
 			try
 			{
 				StageTextType = Class(getDefinitionByName("flash.text.StageText"));
-				const StageTextInitOptionsType:Class = Class(getDefinitionByName("flash.text.StageTextInitOptions"));
+				var StageTextInitOptionsType:Class = Class(getDefinitionByName("flash.text.StageTextInitOptions"));
 				initOptions = new StageTextInitOptionsType(this._multiline);
 			}
 			catch(error:Error)

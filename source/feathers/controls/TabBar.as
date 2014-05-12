@@ -202,7 +202,7 @@ package feathers.controls
 		 */
 		public function TabBar()
 		{
-			this._styleProvider = TabBar.styleProvider;
+			super();
 		}
 
 		/**
@@ -286,6 +286,14 @@ package feathers.controls
 		 * @private
 		 */
 		protected var inactiveTabs:Vector.<ToggleButton> = new <ToggleButton>[];
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return TabBar.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -1134,7 +1142,7 @@ package feathers.controls
 		 */
 		public function get selectedItem():Object
 		{
-			const index:int = this.selectedIndex;
+			var index:int = this.selectedIndex;
 			if(!this._dataProvider || index < 0 || index >= this._dataProvider.length)
 			{
 				return null;
@@ -1346,7 +1354,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1389,11 +1397,11 @@ package feathers.controls
 		 */
 		override protected function draw():void
 		{
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
-			const selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
-			const tabFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TAB_FACTORY);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var selectionInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SELECTED);
+			var tabFactoryInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_TAB_FACTORY);
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
 
 			if(dataInvalid || tabFactoryInvalid)
@@ -1460,15 +1468,12 @@ package feathers.controls
 		 */
 		protected function refreshTabStyles():void
 		{
-			for each(var tab:ToggleButton in this.activeTabs)
+			for(var propertyName:String in this._tabProperties)
 			{
-				for(var propertyName:String in this._tabProperties)
+				var propertyValue:Object = this._tabProperties[propertyName];
+				for each(var tab:ToggleButton in this.activeTabs)
 				{
-					var propertyValue:Object = this._tabProperties[propertyName];
-					if(tab.hasOwnProperty(propertyName))
-					{
-						tab[propertyName] = propertyValue;
-					}
+					tab[propertyName] = propertyValue;
 				}
 			}
 		}
@@ -1591,8 +1596,8 @@ package feathers.controls
 			this.activeLastTab = null;
 
 			var pushIndex:int = 0;
-			const itemCount:int = this._dataProvider ? this._dataProvider.length : 0;
-			const lastItemIndex:int = itemCount - 1;
+			var itemCount:int = this._dataProvider ? this._dataProvider.length : 0;
+			var lastItemIndex:int = itemCount - 1;
 			for(var i:int = 0; i < itemCount; i++)
 			{
 				var item:Object = this._dataProvider.getItemAt(i);
@@ -1638,7 +1643,7 @@ package feathers.controls
 		 */
 		protected function clearInactiveTabs():void
 		{
-			const itemCount:int = this.inactiveTabs.length;
+			var itemCount:int = this.inactiveTabs.length;
 			for(var i:int = 0; i < itemCount; i++)
 			{
 				var tab:ToggleButton = this.inactiveTabs.shift();
@@ -1670,7 +1675,7 @@ package feathers.controls
 			}
 			else
 			{
-				const factory:Function = this._firstTabFactory != null ? this._firstTabFactory : this._tabFactory;
+				var factory:Function = this._firstTabFactory != null ? this._firstTabFactory : this._tabFactory;
 				tab = ToggleButton(factory());
 				if(this._customFirstTabName)
 				{
@@ -1703,7 +1708,7 @@ package feathers.controls
 			}
 			else
 			{
-				const factory:Function = this._lastTabFactory != null ? this._lastTabFactory : this._tabFactory;
+				var factory:Function = this._lastTabFactory != null ? this._lastTabFactory : this._tabFactory;
 				tab = ToggleButton(factory());
 				if(this._customLastTabName)
 				{

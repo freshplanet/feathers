@@ -374,7 +374,7 @@ package feathers.controls
 		 */
 		public function Button()
 		{
-			this._styleProvider = Button.styleProvider;
+			super();
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(TouchEvent.TOUCH, button_touchHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, button_removedFromStageHandler);
@@ -424,6 +424,14 @@ package feathers.controls
 		 * <p>For internal use in subclasses.</p>
 		 */
 		protected var touchPointID:int = -1;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return Button.styleProvider;
+		}
 		
 		/**
 		 * @private
@@ -1454,7 +1462,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultValue);
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultValue);
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1510,7 +1518,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1566,7 +1574,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1622,7 +1630,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1678,7 +1686,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, false));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, false));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -1855,45 +1863,6 @@ package feathers.controls
 			this._iconSelector.setValueForState(value, STATE_DISABLED, false);
 			this.invalidate(INVALIDATION_FLAG_STYLES);
 		}
-		
-		/**
-		 * @private
-		 */
-		protected var _autoFlatten:Boolean = false;
-		
-		/**
-		 * Determines if the button should automatically call <code>flatten()</code>
-		 * after it finishes drawing. In some cases, this will improve
-		 * performance.
-		 *
-		 * <p>The following example tells the button to flatten after it validates:</p>
-		 *
-		 * <listing version="3.0">
-		 * button.autoFlatten = true;</listing>
-		 *
-		 * @default false
-		 */
-		public function get autoFlatten():Boolean
-		{
-			return this._autoFlatten;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set autoFlatten(value:Boolean):void
-		{
-			if(this._autoFlatten == value)
-			{
-				return;
-			}
-			this._autoFlatten = value;
-			this.unflatten();
-			if(this._autoFlatten)
-			{
-				this.flatten();
-			}
-		}
 
 		/**
 		 * @private
@@ -2020,17 +1989,11 @@ package feathers.controls
 			if(textRendererInvalid || stylesInvalid || stateInvalid || dataInvalid || sizeInvalid)
 			{
 				this.layoutContent();
-				}
+			}
 
-				if(sizeInvalid || focusInvalid)
-				{
-					this.refreshFocusIndicator();
-				}
-			
-			if(this._autoFlatten)
+			if(sizeInvalid || focusInvalid)
 			{
-				this.unflatten();
-				this.flatten();
+				this.refreshFocusIndicator();
 			}
 		}
 
@@ -2172,7 +2135,7 @@ package feathers.controls
 				this.labelTextRenderer = null;
 			}
 
-			const factory:Function = this._labelFactory != null ? this._labelFactory : FeathersControl.defaultTextRendererFactory;
+			var factory:Function = this._labelFactory != null ? this._labelFactory : FeathersControl.defaultTextRendererFactory;
 			this.labelTextRenderer = ITextRenderer(factory());
 			this.labelTextRenderer.styleNameList.add(this.labelName);
 			this.addChild(DisplayObject(this.labelTextRenderer));
@@ -2195,7 +2158,7 @@ package feathers.controls
 		 */
 		protected function refreshSkin():void
 		{
-			const oldSkin:DisplayObject = this.currentSkin;
+			var oldSkin:DisplayObject = this.currentSkin;
 			if(this._stateToSkinFunction != null)
 			{
 				this.currentSkin = DisplayObject(this._stateToSkinFunction(this, this._currentState, oldSkin));
@@ -2235,7 +2198,7 @@ package feathers.controls
 		 */
 		protected function refreshIcon():void
 		{
-			const oldIcon:DisplayObject = this.currentIcon;
+			var oldIcon:DisplayObject = this.currentIcon;
 			if(this._stateToIconFunction != null)
 			{
 				this.currentIcon = DisplayObject(this._stateToIconFunction(this, this._currentState, oldIcon));
@@ -2276,15 +2239,10 @@ package feathers.controls
 			{
 				properties = this._labelPropertiesSelector.updateValue(this, this._currentState);
 			}
-
-			const displayLabelRenderer:DisplayObject = DisplayObject(this.labelTextRenderer);
 			for(var propertyName:String in properties)
 			{
-				if(displayLabelRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = properties[propertyName];
-					displayLabelRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = properties[propertyName];
+				this.labelTextRenderer[propertyName] = propertyValue;
 			}
 		}
 		
@@ -2631,7 +2589,7 @@ package feathers.controls
 				}
 
 				touch.getLocation(this.stage, HELPER_POINT);
-				const isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
+				var isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
 				if(touch.phase == TouchPhase.MOVED)
 				{
 					if(isInBounds || this.keepDownStateOnRollOut)

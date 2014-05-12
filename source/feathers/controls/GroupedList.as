@@ -396,7 +396,6 @@ package feathers.controls
 		public function GroupedList()
 		{
 			super();
-			this._styleProvider = GroupedList.styleProvider;
 		}
 
 		/**
@@ -404,6 +403,14 @@ package feathers.controls
 		 * The guts of the List's functionality. Handles layout and selection.
 		 */
 		protected var dataViewPort:GroupedListDataViewPort;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return GroupedList.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -980,7 +987,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1634,7 +1641,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -1847,7 +1854,7 @@ package feathers.controls
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -2201,7 +2208,7 @@ package feathers.controls
 		 */
 		override protected function initialize():void
 		{
-			const hasLayout:Boolean = this._layout != null;
+			var hasLayout:Boolean = this._layout != null;
 
 			super.initialize();
 
@@ -2224,7 +2231,7 @@ package feathers.controls
 					this.verticalScrollPolicy = SCROLL_POLICY_ON;
 				}
 
-				const layout:VerticalLayout = new VerticalLayout();
+				var layout:VerticalLayout = new VerticalLayout();
 				layout.useVirtualLayout = true;
 				layout.paddingTop = layout.paddingRight = layout.paddingBottom =
 					layout.paddingLeft = 0;
@@ -2293,7 +2300,7 @@ package feathers.controls
 		{
 			if(this.pendingGroupIndex >= 0 && this.pendingItemIndex >= 0)
 			{
-				const item:Object = this._dataProvider.getItemAt(this.pendingGroupIndex, this.pendingItemIndex);
+				var item:Object = this._dataProvider.getItemAt(this.pendingGroupIndex, this.pendingItemIndex);
 				if(item is Object)
 				{
 					this.dataViewPort.getScrollPositionForIndex(this.pendingGroupIndex, this.pendingItemIndex, HELPER_POINT);
@@ -2412,7 +2419,7 @@ package feathers.controls
 				{
 					itemIndex = -1;
 					groupIndex++;
-					const groupCount:int = this._dataProvider.getLength();
+					var groupCount:int = this._dataProvider.getLength();
 					while(groupIndex < groupCount && itemIndex < 0)
 					{
 						if(this._dataProvider.getLength(groupIndex) > 0)

@@ -70,7 +70,7 @@ package feathers.controls.text
 		 */
 		public function TextFieldTextRenderer()
 		{
-			this._styleProvider = TextFieldTextRenderer.styleProvider;
+			super();
 			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
@@ -123,6 +123,14 @@ package feathers.controls.text
 		 * @private
 		 */
 		protected var _hasMeasured:Boolean = false;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return TextFieldTextRenderer.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -939,8 +947,8 @@ package feathers.controls.text
 				return result;
 			}
 
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				result.x = this.explicitWidth;
@@ -989,9 +997,9 @@ package feathers.controls.text
 		 */
 		protected function commit():void
 		{
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var stateInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STATE);
 
 			if(stylesInvalid)
 			{
@@ -1049,8 +1057,8 @@ package feathers.controls.text
 				result = new Point();
 			}
 
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 
 			this.textField.autoSize = TextFieldAutoSize.LEFT;
 			this.textField.wordWrap = false;
@@ -1159,7 +1167,7 @@ package feathers.controls.text
 				{
 					this._snapshotHeight = getNextPowerOfTwo(rectangleSnapshotHeight);
 				}
-				const textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
+				var textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
 				this._needsNewTexture = this._needsNewTexture || !this.textSnapshot || this._snapshotWidth != textureRoot.width || this._snapshotHeight != textureRoot.height;
 			}
 
@@ -1172,7 +1180,7 @@ package feathers.controls.text
 			{
 				this._previousTextFieldWidth = this.actualWidth;
 				this._previousTextFieldHeight = this.actualHeight;
-				const hasText:Boolean = this._text.length > 0;
+				var hasText:Boolean = this._text.length > 0;
 				if(hasText)
 				{
 					//we need to wait a frame for the TextField to render
@@ -1204,8 +1212,8 @@ package feathers.controls.text
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			const needsWidth:Boolean = isNaN(this.explicitWidth);
-			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1310,7 +1318,7 @@ package feathers.controls.text
 						else
 						{
 							//this is faster, if we haven't resized the bitmapdata
-							const existingTexture:Texture = snapshot.texture;
+							var existingTexture:Texture = snapshot.texture;
 							existingTexture.root.uploadBitmapData(bitmapData);
 						}
 					}

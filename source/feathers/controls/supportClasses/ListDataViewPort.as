@@ -71,7 +71,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("minVisibleWidth cannot be NaN");
 			}
@@ -92,7 +92,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("maxVisibleWidth cannot be NaN");
 			}
@@ -111,7 +111,8 @@ package feathers.controls.supportClasses
 
 		public function set visibleWidth(value:Number):void
 		{
-			if(this.explicitVisibleWidth == value || (isNaN(value) && isNaN(this.explicitVisibleWidth)))
+			if(this.explicitVisibleWidth == value ||
+				(value != value && this.explicitVisibleWidth != this.explicitVisibleWidth)) //isNaN
 			{
 				return;
 			}
@@ -132,7 +133,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("minVisibleHeight cannot be NaN");
 			}
@@ -153,7 +154,7 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			if(isNaN(value))
+			if(value != value) //isNaN
 			{
 				throw new ArgumentError("maxVisibleHeight cannot be NaN");
 			}
@@ -172,7 +173,8 @@ package feathers.controls.supportClasses
 
 		public function set visibleHeight(value:Number):void
 		{
-			if(this.explicitVisibleHeight == value || (isNaN(value) && isNaN(this.explicitVisibleHeight)))
+			if(this.explicitVisibleHeight == value ||
+				(value != value && this.explicitVisibleHeight != this.explicitVisibleHeight)) //isNaN
 			{
 				return;
 			}
@@ -728,20 +730,17 @@ package feathers.controls.supportClasses
 
 		private function refreshOneItemRendererStyles(renderer:IListItemRenderer):void
 		{
-			const displayRenderer:DisplayObject = DisplayObject(renderer);
+			var displayRenderer:DisplayObject = DisplayObject(renderer);
 			for(var propertyName:String in this._itemRendererProperties)
 			{
-				if(displayRenderer.hasOwnProperty(propertyName))
-				{
-					var propertyValue:Object = this._itemRendererProperties[propertyName];
-					displayRenderer[propertyName] = propertyValue;
-				}
+				var propertyValue:Object = this._itemRendererProperties[propertyName];
+				displayRenderer[propertyName] = propertyValue;
 			}
 		}
 
 		protected function refreshSelection():void
 		{
-			const rendererCount:int = this._activeRenderers.length;
+			var rendererCount:int = this._activeRenderers.length;
 			for(var i:int = 0; i < rendererCount; i++)
 			{
 				var renderer:IListItemRenderer = this._activeRenderers[i];
@@ -751,10 +750,10 @@ package feathers.controls.supportClasses
 
 		protected function refreshEnabled():void
 		{
-			const rendererCount:int = this._activeRenderers.length;
+			var rendererCount:int = this._activeRenderers.length;
 			for(var i:int = 0; i < rendererCount; i++)
 			{
-				const itemRenderer:IFeathersControl = IFeathersControl(this._activeRenderers[i]);
+				var itemRenderer:IFeathersControl = IFeathersControl(this._activeRenderers[i]);
 				itemRenderer.isEnabled = this._isEnabled;
 			}
 		}
@@ -774,7 +773,7 @@ package feathers.controls.supportClasses
 
 		protected function refreshInactiveRenderers(itemRendererTypeIsInvalid:Boolean):void
 		{
-			const temp:Vector.<IListItemRenderer> = this._inactiveRenderers;
+			var temp:Vector.<IListItemRenderer> = this._inactiveRenderers;
 			this._inactiveRenderers = this._activeRenderers;
 			this._activeRenderers = temp;
 			if(this._activeRenderers.length > 0)
@@ -870,8 +869,8 @@ package feathers.controls.supportClasses
 				{
 					beforeItemCount = 0;
 				}
-				const afterItemCount:int = itemCount - 1 - maxIndex;
-				const sequentialVirtualLayout:ITrimmedVirtualLayout = ITrimmedVirtualLayout(this._layout);
+				var afterItemCount:int = itemCount - 1 - maxIndex;
+				var sequentialVirtualLayout:ITrimmedVirtualLayout = ITrimmedVirtualLayout(this._layout);
 				sequentialVirtualLayout.beforeVirtualizedItemCount = beforeItemCount;
 				sequentialVirtualLayout.afterVirtualizedItemCount = afterItemCount;
 				this._layoutItems.length = itemCount - beforeItemCount - afterItemCount;
@@ -958,7 +957,7 @@ package feathers.controls.supportClasses
 
 		private function renderUnrenderedData():void
 		{
-			const itemCount:int = this._unrenderedData.length;
+			var itemCount:int = this._unrenderedData.length;
 			for(var i:int = 0; i < itemCount; i++)
 			{
 				var item:Object = this._unrenderedData.shift();
@@ -971,7 +970,7 @@ package feathers.controls.supportClasses
 
 		private function recoverInactiveRenderers():void
 		{
-			const itemCount:int = this._inactiveRenderers.length;
+			var itemCount:int = this._inactiveRenderers.length;
 			for(var i:int = 0; i < itemCount; i++)
 			{
 				var renderer:IListItemRenderer = this._inactiveRenderers[i];
@@ -986,7 +985,7 @@ package feathers.controls.supportClasses
 
 		protected function freeInactiveRenderers():void
 		{
-			const itemCount:int = this._inactiveRenderers.length;
+			var itemCount:int = this._inactiveRenderers.length;
 			for(var i:int = 0; i < itemCount; i++)
 			{
 				var renderer:IListItemRenderer = this._inactiveRenderers.shift();
@@ -1073,8 +1072,8 @@ package feathers.controls.supportClasses
 		private function dataProvider_addItemHandler(event:Event, index:int):void
 		{
 			var selectionChanged:Boolean = false;
-			const newIndices:Vector.<int> = new <int>[];
-			const indexCount:int = this._selectedIndices.length;
+			var newIndices:Vector.<int> = new <int>[];
+			var indexCount:int = this._selectedIndices.length;
 			for(var i:int = 0; i < indexCount; i++)
 			{
 				var currentIndex:int = this._selectedIndices.getItemAt(i) as int;
@@ -1090,7 +1089,7 @@ package feathers.controls.supportClasses
 				this._selectedIndices.data = newIndices;
 			}
 
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
@@ -1101,8 +1100,8 @@ package feathers.controls.supportClasses
 		private function dataProvider_removeItemHandler(event:Event, index:int):void
 		{
 			var selectionChanged:Boolean = false;
-			const newIndices:Vector.<int> = new <int>[];
-			const indexCount:int = this._selectedIndices.length;
+			var newIndices:Vector.<int> = new <int>[];
+			var indexCount:int = this._selectedIndices.length;
 			for(var i:int = 0; i < indexCount; i++)
 			{
 				var currentIndex:int = this._selectedIndices.getItemAt(i) as int;
@@ -1125,7 +1124,7 @@ package feathers.controls.supportClasses
 				this._selectedIndices.data = newIndices;
 			}
 
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
@@ -1135,13 +1134,13 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_replaceItemHandler(event:Event, index:int):void
 		{
-			const indexOfIndex:int = this._selectedIndices.getItemIndex(index);
+			var indexOfIndex:int = this._selectedIndices.getItemIndex(index);
 			if(indexOfIndex >= 0)
 			{
 				this._selectedIndices.removeItemAt(indexOfIndex);
 			}
 
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
@@ -1153,7 +1152,7 @@ package feathers.controls.supportClasses
 		{
 			this._selectedIndices.removeAll();
 
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
@@ -1163,8 +1162,8 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_updateItemHandler(event:Event, index:int):void
 		{
-			const item:Object = this._dataProvider.getItemAt(index);
-			const renderer:IListItemRenderer = IListItemRenderer(this._rendererMap[item]);
+			var item:Object = this._dataProvider.getItemAt(index);
+			var renderer:IListItemRenderer = IListItemRenderer(this._rendererMap[item]);
 			if(!renderer)
 			{
 				return;
@@ -1189,12 +1188,12 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			const layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
+			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{
 				return;
 			}
-			const renderer:IListItemRenderer = IListItemRenderer(event.currentTarget);
+			var renderer:IListItemRenderer = IListItemRenderer(event.currentTarget);
 			layout.resetVariableVirtualCacheAtIndex(renderer.index, DisplayObject(renderer));
 			this.invalidate(INVALIDATION_FLAG_LAYOUT);
 			this.invalidateParent(INVALIDATION_FLAG_LAYOUT);
@@ -1206,17 +1205,17 @@ package feathers.controls.supportClasses
 			{
 				return;
 			}
-			const renderer:IListItemRenderer = IListItemRenderer(event.currentTarget);
+			var renderer:IListItemRenderer = IListItemRenderer(event.currentTarget);
 			if(!this._isSelectable || this._isScrolling)
 			{
 				renderer.isSelected = false;
 				return;
 			}
-			const isSelected:Boolean = renderer.isSelected;
-			const index:int = renderer.index;
+			var isSelected:Boolean = renderer.isSelected;
+			var index:int = renderer.index;
 			if(this._allowMultipleSelection)
 			{
-				const indexOfIndex:int = this._selectedIndices.getItemIndex(index);
+				var indexOfIndex:int = this._selectedIndices.getItemIndex(index);
 				if(isSelected && indexOfIndex < 0)
 				{
 					this._selectedIndices.addItem(index);

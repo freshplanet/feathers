@@ -2526,7 +2526,7 @@ package feathers.controls.renderers
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -2705,7 +2705,7 @@ package feathers.controls.renderers
 			}
 			if(!(value is PropertyProxy))
 			{
-				const newValue:PropertyProxy = new PropertyProxy();
+				var newValue:PropertyProxy = new PropertyProxy();
 				for(var propertyName:String in value)
 				{
 					newValue[propertyName] = value[propertyName];
@@ -3093,13 +3093,13 @@ package feathers.controls.renderers
 		 */
 		override protected function autoSizeIfNeeded():Boolean
 		{
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
 			}
-			const oldIgnoreAccessoryResizes:Boolean = this._ignoreAccessoryResizes;
+			var oldIgnoreAccessoryResizes:Boolean = this._ignoreAccessoryResizes;
 			this._ignoreAccessoryResizes = true;
 			this.refreshMaxLabelWidth(true);
 			this.labelTextRenderer.measureText(HELPER_POINT);
@@ -3665,11 +3665,8 @@ package feathers.controls.renderers
 				var displayIconLabel:DisplayObject = DisplayObject(this.iconLabel);
 				for(var propertyName:String in this._iconLabelProperties)
 				{
-					if(displayIconLabel.hasOwnProperty(propertyName))
-					{
-						var propertyValue:Object = this._iconLabelProperties[propertyName];
-						displayIconLabel[propertyName] = propertyValue;
-					}
+					var propertyValue:Object = this._iconLabelProperties[propertyName];
+					displayIconLabel[propertyName] = propertyValue;
 				}
 			}
 		}
@@ -3688,11 +3685,8 @@ package feathers.controls.renderers
 				var displayAccessoryLabel:DisplayObject = DisplayObject(this.accessoryLabel);
 				for(var propertyName:String in this._accessoryLabelProperties)
 				{
-					if(displayAccessoryLabel.hasOwnProperty(propertyName))
-					{
-						var propertyValue:Object = this._accessoryLabelProperties[propertyName];
-						displayAccessoryLabel[propertyName] = propertyValue;
-					}
+					var propertyValue:Object = this._accessoryLabelProperties[propertyName];
+					displayAccessoryLabel[propertyName] = propertyValue;
 				}
 			}
 		}
@@ -3778,7 +3772,7 @@ package feathers.controls.renderers
 			if(this._label)
 			{
 				this.labelTextRenderer.validate();
-				const labelRenderer:DisplayObject = DisplayObject(this.labelTextRenderer);
+				var labelRenderer:DisplayObject = DisplayObject(this.labelTextRenderer);
 			}
 			var iconIsInLayout:Boolean = this.currentIcon && this._iconPosition != ICON_POSITION_MANUAL;
 			var accessoryIsInLayout:Boolean = this.accessory && this._accessoryPosition != ACCESSORY_POSITION_MANUAL;
@@ -3873,7 +3867,11 @@ package feathers.controls.renderers
 			var calculatedWidth:Number = this.actualWidth;
 			if(forMeasurement)
 			{
-				calculatedWidth = isNaN(this.explicitWidth) ? this._maxWidth : this.explicitWidth;
+				calculatedWidth = this.explicitWidth;
+				if(calculatedWidth != calculatedWidth) //isNaN
+				{
+					calculatedWidth = this._maxWidth;
+				}
 			}
 			calculatedWidth -= (this._paddingLeft + this._paddingRight);
 
@@ -4005,10 +4003,10 @@ package feathers.controls.renderers
 		 */
 		protected function positionRelativeToOthers(object:DisplayObject, relativeTo:DisplayObject, relativeTo2:DisplayObject, position:String, gap:Number, otherPosition:String, otherGap:Number):void
 		{
-			const relativeToX:Number = relativeTo2 ? Math.min(relativeTo.x, relativeTo2.x) : relativeTo.x;
-			const relativeToY:Number = relativeTo2 ? Math.min(relativeTo.y, relativeTo2.y) : relativeTo.y;
-			const relativeToWidth:Number = relativeTo2 ? (Math.max(relativeTo.x + relativeTo.width, relativeTo2.x + relativeTo2.width) - relativeToX) : relativeTo.width;
-			const relativeToHeight:Number = relativeTo2 ? (Math.max(relativeTo.y + relativeTo.height, relativeTo2.y + relativeTo2.height) - relativeToY) : relativeTo.height;
+			var relativeToX:Number = relativeTo2 ? Math.min(relativeTo.x, relativeTo2.x) : relativeTo.x;
+			var relativeToY:Number = relativeTo2 ? Math.min(relativeTo.y, relativeTo2.y) : relativeTo.y;
+			var relativeToWidth:Number = relativeTo2 ? (Math.max(relativeTo.x + relativeTo.width, relativeTo2.x + relativeTo2.width) - relativeToX) : relativeTo.width;
+			var relativeToHeight:Number = relativeTo2 ? (Math.max(relativeTo.y + relativeTo.height, relativeTo2.y + relativeTo2.height) - relativeToY) : relativeTo.height;
 			var newRelativeToX:Number = relativeToX;
 			var newRelativeToY:Number = relativeToY;
 			if(position == ACCESSORY_POSITION_TOP)

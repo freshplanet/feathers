@@ -9,6 +9,7 @@ package feathers.controls
 {
 	import feathers.core.IToggle;
 	import feathers.core.PropertyProxy;
+	import feathers.skins.IStyleProvider;
 
 	import starling.display.DisplayObject;
 	import starling.events.Event;
@@ -55,6 +56,17 @@ package feathers.controls
 	public class ToggleButton extends Button implements IToggle
 	{
 		/**
+		 * The default <code>IStyleProvider</code> for all <code>ToggleButton</code>
+		 * components. If <code>null</code>, falls back to using
+		 * <code>Button.styleProvider</code> instead.
+		 *
+		 * @default null
+		 * @see feathers.core.FeathersControl#styleProvider
+		 * @see feathers.controls.Button#styleProvider
+		 */
+		public static var styleProvider:IStyleProvider;
+
+		/**
 		 * Constructor.
 		 */
 		public function ToggleButton()
@@ -65,7 +77,19 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		protected var _isToggle:Boolean = false;
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			if(ToggleButton.styleProvider)
+			{
+				return ToggleButton.styleProvider;
+			}
+			return Button.styleProvider;
+		}
+
+		/**
+		 * @private
+		 */
+		protected var _isToggle:Boolean = true;
 
 		/**
 		 * Determines if the button may be selected or unselected when clicked.
@@ -355,7 +379,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultSelectedValue);
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.defaultSelectedValue);
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -415,7 +439,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, true));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_UP, true));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -475,7 +499,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, true));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DOWN, true));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -535,7 +559,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, true));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_HOVER, true));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);
@@ -595,7 +619,7 @@ package feathers.controls
 			{
 				value = PropertyProxy.fromObject(value);
 			}
-			const oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, true));
+			var oldValue:PropertyProxy = PropertyProxy(this._labelPropertiesSelector.getValueForState(STATE_DISABLED, true));
 			if(oldValue)
 			{
 				oldValue.removeOnChangeCallback(childProperties_onChange);

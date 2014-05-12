@@ -189,7 +189,7 @@ package feathers.controls
 		 */
 		public function ScrollText()
 		{
-			this._styleProvider = ScrollText.styleProvider;
+			super();
 			this.textViewPort = new TextFieldViewPort();
 			this.textViewPort.addEventListener(Event.TRIGGERED, textViewPort_triggeredHandler);
 			this.viewPort = this.textViewPort;
@@ -199,6 +199,14 @@ package feathers.controls
 		 * @private
 		 */
 		protected var textViewPort:TextFieldViewPort;
+
+		/**
+		 * @private
+		 */
+		override protected function get defaultStyleProvider():IStyleProvider
+		{
+			return ScrollText.styleProvider;
+		}
 
 		/**
 		 * @private
@@ -1030,9 +1038,9 @@ package feathers.controls
 		override protected function draw():void
 		{
 			var sizeInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SIZE);
-			const dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
-			const scrollInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SCROLL);
-			const stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
+			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
+			var scrollInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_SCROLL);
+			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 
 			if(dataInvalid)
 			{
