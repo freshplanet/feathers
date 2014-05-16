@@ -811,11 +811,11 @@ package feathers.controls
 		 */
 		override protected function trigger():void
 		{
-			super.trigger();
 			if(this._isToggle)
 			{
 				this.isSelected = !this._isSelected;
 			}
+			super.trigger();
 		}
 	}
 }
