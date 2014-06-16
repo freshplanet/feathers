@@ -76,6 +76,15 @@ package feathers.controls
 			this.originalDPI = DeviceCapabilities.dpi;
 		}
 
+		override public function dispose():void
+		{
+			backButtonHandler = null;
+			menuButtonHandler = null;
+			searchButtonHandler = null;
+			
+			super.dispose();
+		}
+		
 		/**
 		 * @private
 		 */
