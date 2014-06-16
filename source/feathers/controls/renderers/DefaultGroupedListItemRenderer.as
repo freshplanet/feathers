@@ -292,6 +292,7 @@ package feathers.controls.renderers
 		override public function dispose():void
 		{
 			this.owner = null;
+			this.data = null;
 			super.dispose();
 		}
 	}
