@@ -7,6 +7,13 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.text
 {
+	import feathers.core.FeathersControl;
+	import feathers.core.IMultilineTextEditor;
+	import feathers.events.FeathersEventType;
+	import feathers.text.StageTextField;
+	import feathers.utils.geom.matrixToScaleX;
+	import feathers.utils.geom.matrixToScaleY;
+
 	import flash.display.BitmapData;
 	import flash.events.Event;
 	import flash.events.FocusEvent;
@@ -84,7 +91,6 @@ package feathers.controls.text
 	 *
 	 * @eventType feathers.events.FeathersEventType.ENTER
 	 * @see #returnKeyLabel
-	 * @see flash.text.ReturnKeyLabel
 	 */
 	[Event(name="enter",type="starling.events.Event")]
 
@@ -192,7 +198,7 @@ package feathers.controls.text
 	 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/StageText.html flash.text.StageText
 	 * @see feathers.text.StageTextField
 	 */
-	public class StageTextTextEditor extends FeathersControl implements ITextEditor
+	public class StageTextTextEditor extends FeathersControl implements IMultilineTextEditor
 	{
 		/**
 		 * @private
@@ -214,9 +220,9 @@ package feathers.controls.text
 		 */
 		public function StageTextTextEditor()
 		{
+			this._stageTextIsTextField = /^(Windows|Mac OS|Linux) .*/.exec(Capabilities.os);
 			this.isQuickHitAreaEnabled = true;
-			this.addEventListener(starling.events.Event.ADDED_TO_STAGE, addedToStageHandler);
-			this.addEventListener(starling.events.Event.REMOVED_FROM_STAGE, removedFromStageHandler);
+			this.addEventListener(starling.events.Event.REMOVED_FROM_STAGE, textEditor_removedFromStageHandler);
 		}
 
 		/**
@@ -311,6 +317,14 @@ package feathers.controls.text
 		}
 		/**
 		 * @private
+		 * This flag tells us if StageText is implemented by a TextField under
+		 * the hood. We want to eliminate that damn TextField gutter to improve
+		 * consistency across platforms.
+		 */
+		protected var _stageTextIsTextField:Boolean = false;
+
+		/**
+		 * @private
 		 */
 		protected var _stageTextHasFocus:Boolean = false;
 
@@ -333,6 +347,18 @@ package feathers.controls.text
 		 * @private
 		 */
 		protected var _stageTextIsComplete:Boolean = false;
+
+		/**
+		 * @inheritDoc
+		 */
+		public function get baseline():Number
+		{
+			if(!this._measureTextField)
+			{
+				return 0;
+			}
+			return this._measureTextField.getLineMetrics(0).ascent;
+		}
 
 		/**
 		 * @private
@@ -948,7 +974,26 @@ package feathers.controls.text
 		 */
 		override public function dispose():void
 		{
-			this.disposeContent();
+			if(this._measureTextField)
+			{
+				Starling.current.nativeStage.removeChild(this._measureTextField);
+				this._measureTextField = null;
+			}
+
+			if(this.stageText)
+			{
+				this.disposeStageText();
+			}
+
+			if(this.textSnapshot)
+			{
+				//avoid the need to call dispose(). we'll create a new snapshot
+				//when the renderer is added to stage again.
+				this.textSnapshot.texture.dispose();
+				this.removeChild(this.textSnapshot, true);
+				this.textSnapshot = null;
+			}
+
 			super.dispose();
 		}
 
@@ -957,9 +1002,16 @@ package feathers.controls.text
 		 */
 		override public function render(support:RenderSupport, parentAlpha:Number):void
 		{
+			var desktopGutterPositionOffset:Number = 0;
+			var desktopGutterDimensionsOffset:Number = 0;
+			if(this._stageTextIsTextField)
+			{
+				desktopGutterPositionOffset = 2;
+				desktopGutterDimensionsOffset = 4;
+			}
 			HELPER_POINT.x = HELPER_POINT.y = 0;
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
-			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
+			MatrixUtil.transformCoords(HELPER_MATRIX, -desktopGutterPositionOffset, -desktopGutterPositionOffset, HELPER_POINT);
 			var starlingViewPort:Rectangle = Starling.current.viewPort;
 			var stageTextViewPort:Rectangle = this.stageText.viewPort;
 			if(!stageTextViewPort)
@@ -1009,8 +1061,8 @@ package feathers.controls.text
 			{
 				if(position)
 				{
-					var positionX:Number = position.x;
-					var positionY:Number = position.y;
+					var positionX:Number = position.x + 2;
+					var positionY:Number = position.y + 2;
 					if(positionX < 0)
 					{
 						this._pendingSelectionStartIndex = this._pendingSelectionEndIndex = 0;
@@ -1040,7 +1092,11 @@ package feathers.controls.text
 							}
 							else
 							{
-								this._pendingSelectionStartIndex = this._text.length;
+								this._pendingSelectionStartIndex = this._measureTextField.getCharIndexAtPoint(positionX, this._measureTextField.getLineMetrics(0).ascent / 2);
+								if(this._pendingSelectionStartIndex < 0)
+								{
+									this._pendingSelectionStartIndex = this._text.length;
+								}
 							}
 						}
 						else
@@ -1078,7 +1134,6 @@ package feathers.controls.text
 				return;
 			}
 			Starling.current.nativeStage.focus = Starling.current.nativeStage;
-			this.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 		}
 
 		/**
@@ -1139,6 +1194,31 @@ package feathers.controls.text
 			result = this.measure(result);
 
 			return result;
+		}
+
+		/**
+		 * @private
+		 */
+		override protected function initialize():void
+		{
+			if(this._measureTextField && !this._measureTextField.parent)
+			{
+				Starling.current.nativeStage.addChild(this._measureTextField);
+			}
+			else if(!this._measureTextField)
+			{
+				this._measureTextField = new TextField();
+				this._measureTextField.visible = false;
+				this._measureTextField.mouseEnabled = this._measureTextField.mouseWheelEnabled = false;
+				this._measureTextField.autoSize = TextFieldAutoSize.LEFT;
+				this._measureTextField.multiline = false;
+				this._measureTextField.wordWrap = false;
+				this._measureTextField.embedFonts = false;
+				this._measureTextField.defaultTextFormat = new TextFormat(null, 11, 0x000000, false, false, false);
+				Starling.current.nativeStage.addChild(this._measureTextField);
+			}
+
+			this.createStageText();
 		}
 
 		/**
@@ -1214,22 +1294,38 @@ package feathers.controls.text
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
-				newWidth = Math.max(this._minWidth, Math.min(this._maxWidth, this._measureTextField.width));
+				newWidth = this._measureTextField.textWidth;
+				if(newWidth < this._minWidth)
+				{
+					newWidth = this._minWidth;
+				}
+				else if(newWidth > this._maxWidth)
+				{
+					newWidth = this._maxWidth;
+				}
 			}
 
-			this._measureTextField.width = newWidth;
+			this._measureTextField.width = newWidth + 4;
 			var newHeight:Number = this.explicitHeight;
 			if(needsHeight)
 			{
-				newHeight = Math.max(this._minHeight, Math.min(this._maxHeight, this._measureTextField.height));
+				newHeight = this._measureTextField.textHeight;
+				if(newHeight < this._minHeight)
+				{
+					newHeight = this._minHeight;
+				}
+				else if(newHeight > this._maxHeight)
+				{
+					newHeight = this._maxHeight;
+				}
 			}
 
 			this._measureTextField.autoSize = TextFieldAutoSize.NONE;
 
 			//put the width and height back just in case we measured without
 			//a full validation
-			this._measureTextField.width = this.actualWidth;
-			this._measureTextField.height = this.actualHeight;
+			this._measureTextField.width = this.actualWidth + 4;
+			this._measureTextField.height = this.actualHeight + 4;
 
 			result.x = newWidth;
 			result.y = newHeight;
@@ -1433,6 +1529,11 @@ package feathers.controls.text
 				bitmapData = new BitmapData(viewPort.width, viewPort.height, true, 0x00ff00ff);
 			}
 			this.stageText.drawViewPortToBitmapData(bitmapData);
+			if(this._stageTextIsTextField)
+			{
+				HELPER_POINT.setTo(0, 0);
+				bitmapData.copyPixels(bitmapData, new Rectangle(2, 2, bitmapData.width, bitmapData.height), HELPER_POINT);
+			}
 
 			var newTexture:Texture;
 			if(!this.textSnapshot || this._needsNewTexture)
@@ -1484,10 +1585,17 @@ package feathers.controls.text
 			}
 
 			HELPER_POINT.x = HELPER_POINT.y = 0;
+			var desktopGutterPositionOffset:Number = 0;
+			var desktopGutterDimensionsOffset:Number = 0;
+			if(this._stageTextIsTextField)
+			{
+				desktopGutterPositionOffset = 2;
+				desktopGutterDimensionsOffset = 4;
+			}
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
 			var globalScaleX:Number = matrixToScaleX(HELPER_MATRIX);
 			var globalScaleY:Number = matrixToScaleY(HELPER_MATRIX);
-			MatrixUtil.transformCoords(HELPER_MATRIX, 0, 0, HELPER_POINT);
+			MatrixUtil.transformCoords(HELPER_MATRIX, -desktopGutterPositionOffset, -desktopGutterPositionOffset, HELPER_POINT);
 			var nativeScaleFactor:Number = 1;
 			if(Starling.current.supportHighResolutions)
 			{
@@ -1496,13 +1604,13 @@ package feathers.controls.text
 			var scaleFactor:Number = Starling.contentScaleFactor / nativeScaleFactor;
 			stageTextViewPort.x = Math.round(starlingViewPort.x + HELPER_POINT.x * scaleFactor);
 			stageTextViewPort.y = Math.round(starlingViewPort.y + HELPER_POINT.y * scaleFactor);
-			var viewPortWidth:Number = Math.round(this.actualWidth * scaleFactor * globalScaleX);
+			var viewPortWidth:Number = Math.round((this.actualWidth + desktopGutterDimensionsOffset) * scaleFactor * globalScaleX);
 			if(viewPortWidth < 1 ||
 				viewPortWidth != viewPortWidth) //isNaN
 			{
 				viewPortWidth = 1;
 			}
-			var viewPortHeight:Number = Math.round(this.actualHeight * scaleFactor * globalScaleY);
+			var viewPortHeight:Number = Math.round((this.actualHeight + desktopGutterDimensionsOffset) * scaleFactor * globalScaleY);
 			if(viewPortHeight < 1 ||
 				viewPortHeight != viewPortHeight) //isNaN
 			{
@@ -1525,34 +1633,8 @@ package feathers.controls.text
 			stageTextViewPort.height = viewPortHeight;
 			this.stageText.viewPort = stageTextViewPort;
 
-			this._measureTextField.width = this.actualWidth;
-			this._measureTextField.height = this.actualHeight;
-		}
-
-		/**
-		 * @private
-		 */
-		protected function disposeContent():void
-		{
-			if(this._measureTextField)
-			{
-				Starling.current.nativeStage.removeChild(this._measureTextField);
-				this._measureTextField = null;
-			}
-
-			if(this.stageText)
-			{
-				this.disposeStageText();
-			}
-
-			if(this.textSnapshot)
-			{
-				//avoid the need to call dispose(). we'll create a new snapshot
-				//when the renderer is added to stage again.
-				this.textSnapshot.texture.dispose();
-				this.removeChild(this.textSnapshot, true);
-				this.textSnapshot = null;
-			}
+			this._measureTextField.width = this.actualWidth + 4;
+			this._measureTextField.height = this.actualHeight + 4;
 		}
 
 		/**
@@ -1615,34 +1697,11 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		protected function addedToStageHandler(event:starling.events.Event):void
+		protected function textEditor_removedFromStageHandler(event:starling.events.Event):void
 		{
-			if(this._measureTextField && !this._measureTextField.parent)
-			{
-				Starling.current.nativeStage.addChild(this._measureTextField);
-			}
-			else if(!this._measureTextField)
-			{
-				this._measureTextField = new TextField();
-				this._measureTextField.visible = false;
-				this._measureTextField.mouseEnabled = this._measureTextField.mouseWheelEnabled = false;
-				this._measureTextField.autoSize = TextFieldAutoSize.LEFT;
-				this._measureTextField.multiline = false;
-				this._measureTextField.wordWrap = false;
-				this._measureTextField.embedFonts = false;
-				this._measureTextField.defaultTextFormat = new TextFormat(null, 11, 0x000000, false, false, false);
-				Starling.current.nativeStage.addChild(this._measureTextField);
-			}
-
-			this.createStageText();
-		}
-
-		/**
-		 * @private
-		 */
-		protected function removedFromStageHandler(event:starling.events.Event):void
-		{
-			this.disposeContent();
+			//remove this from the stage, if needed
+			//it will be added back next time we receive focus
+			this.stageText.stage = null;
 		}
 
 		/**

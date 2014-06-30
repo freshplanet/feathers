@@ -7,20 +7,16 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
-	import feathers.controls.IScrollContainer;
 	import feathers.controls.supportClasses.LayoutViewPort;
-	import feathers.core.FocusManager;
 	import feathers.events.FeathersEventType;
 
-	import flash.display.Sprite;
-
+	import flash.display.InteractiveObject;
 	import flash.display.Stage;
-
 	import flash.events.FocusEvent;
 	import flash.ui.Keyboard;
+	import flash.utils.Dictionary;
 
 	import starling.core.Starling;
-
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
 	import starling.events.Event;
@@ -38,25 +34,38 @@ package feathers.core
 		/**
 		 * @private
 		 */
-		protected static var _nativeFocusTarget:Sprite;
-
-		/**
-		 * @private
-		 */
-		protected static var _nativeFocusTargetReferenceCount:int = 0;
+		protected static var NATIVE_STAGE_TO_FOCUS_TARGET:Dictionary = new Dictionary(true);
 
 		/**
 		 * Constructor.
 		 */
-		public function DefaultFocusManager(root:DisplayObjectContainer = null)
+		public function DefaultFocusManager(root:DisplayObjectContainer)
 		{
-			if(!root)
+			if(!root.stage)
 			{
-				root = Starling.current.stage;
+				throw new ArgumentError("Focus manager root must be added to the stage.");
 			}
 			this._root = root;
+			for each(var starling:Starling in Starling.all)
+			{
+				if(starling.stage == root.stage)
+				{
+					this._starling = starling;
+					break;
+				}
+			}
 			this.setFocusManager(this._root);
 		}
+
+		/**
+		 * @private
+		 */
+		protected var _starling:Starling;
+
+		/**
+		 * @private
+		 */
+		protected var _nativeFocusTarget:NativeFocusTarget;
 
 		/**
 		 * @private
@@ -98,40 +107,38 @@ package feathers.core
 			this._isEnabled = value;
 			if(this._isEnabled)
 			{
-				_nativeFocusTargetReferenceCount++;
-				if(_nativeFocusTargetReferenceCount == 1)
+				this._nativeFocusTarget = NATIVE_STAGE_TO_FOCUS_TARGET[this._starling.nativeStage] as NativeFocusTarget;
+				if(!this._nativeFocusTarget)
 				{
-					//we need a native display object on the native stage to receive
-					//key focus change events!
-					_nativeFocusTarget = new Sprite();
-					_nativeFocusTarget.tabEnabled = true;
-					_nativeFocusTarget.mouseEnabled = false;
-					_nativeFocusTarget.mouseChildren = false;
-					_nativeFocusTarget.alpha = 0;
-					Starling.current.nativeOverlay.addChild(_nativeFocusTarget);
+					this._nativeFocusTarget = new NativeFocusTarget();
+					this._starling.nativeOverlay.addChild(_nativeFocusTarget);
 				}
-
+				else
+				{
+					this._nativeFocusTarget.referenceCount++;
+				}
 				this._root.addEventListener(Event.ADDED, topLevelContainer_addedHandler);
 				this._root.addEventListener(Event.REMOVED, topLevelContainer_removedHandler);
 				this._root.addEventListener(TouchEvent.TOUCH, topLevelContainer_touchHandler);
-				Starling.current.nativeStage.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler, false, 0, true);
-				Starling.current.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler, false, 0, true);
+				this._starling.nativeStage.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler, false, 0, true);
+				this._starling.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler, false, 0, true);
 				this.focus = this._savedFocus;
 				this._savedFocus = null;
 			}
 			else
 			{
-				_nativeFocusTargetReferenceCount--;
-				if(_nativeFocusTargetReferenceCount <= 0)
+				this._nativeFocusTarget.referenceCount--;
+				if(this._nativeFocusTarget.referenceCount <= 0)
 				{
-					_nativeFocusTarget.parent.removeChild(_nativeFocusTarget);
-					_nativeFocusTarget = null;
+					this._nativeFocusTarget.parent.removeChild(this._nativeFocusTarget);
+					delete NATIVE_STAGE_TO_FOCUS_TARGET[this._starling.nativeStage];
 				}
+				this._nativeFocusTarget = null;
 				this._root.removeEventListener(Event.ADDED, topLevelContainer_addedHandler);
 				this._root.removeEventListener(Event.REMOVED, topLevelContainer_removedHandler);
 				this._root.removeEventListener(TouchEvent.TOUCH, topLevelContainer_touchHandler);
-				Starling.current.nativeStage.removeEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler);
-				Starling.current.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler);
+				this._starling.nativeStage.removeEventListener(FocusEvent.KEY_FOCUS_CHANGE, stage_keyFocusChangeHandler);
+				this._starling.nativeStage.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, stage_mouseFocusChangeHandler);
 				var focusToSave:IFocusDisplayObject = this.focus;
 				this.focus = null;
 				this._savedFocus = focusToSave;
@@ -167,33 +174,37 @@ package feathers.core
 			{
 				return;
 			}
-			if(this._focus)
+			var oldFocus:IFeathersDisplayObject = this._focus;
+			if(this._isEnabled && value && value.isFocusEnabled && value.focusManager == this)
 			{
-				this._focus.removeEventListener(Event.REMOVED_FROM_STAGE, focus_removedFromStageHandler);
-				this._focus.dispatchEventWith(FeathersEventType.FOCUS_OUT);
+				this._focus = value;
+			}
+			else
+			{
 				this._focus = null;
 			}
-			if(!value || !value.isFocusEnabled)
+			if(oldFocus)
 			{
-				this._focus = null;
-				return;
+				//this event should be dispatched after setting the new value of
+				//_focus because we want to be able to access it in the event
+				//listener
+				oldFocus.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 			}
 			if(this._isEnabled)
 			{
-				this._focus = value;
+				var nativeStage:Stage = this._starling.nativeStage;
 				if(this._focus)
 				{
-					var nativeStage:Stage = Starling.current.nativeStage;
 					if(!nativeStage.focus)
 					{
-						nativeStage.focus = _nativeFocusTarget;
+						nativeStage.focus = this._nativeFocusTarget;
 					}
-					this._focus.addEventListener(Event.REMOVED_FROM_STAGE, focus_removedFromStageHandler);
+					nativeStage.focus.addEventListener(FocusEvent.FOCUS_OUT, nativeFocus_focusOutHandler, false, 0, true);
 					this._focus.dispatchEventWith(FeathersEventType.FOCUS_IN);
 				}
 				else
 				{
-					Starling.current.nativeStage.focus = null;
+					nativeStage.focus = null;
 				}
 			}
 			else
@@ -221,6 +232,30 @@ package feathers.core
 					var child:DisplayObject = container.getChildAt(i);
 					this.setFocusManager(child);
 				}
+				if(container is IFocusExtras)
+				{
+					var containerWithExtras:IFocusExtras = IFocusExtras(container);
+					var extras:Vector.<DisplayObject> = containerWithExtras.focusExtrasBefore;
+					if(extras)
+					{
+						childCount = extras.length;
+						for(i = 0; i < childCount; i++)
+						{
+							child = extras[i];
+							this.setFocusManager(child);
+						}
+					}
+					extras = containerWithExtras.focusExtrasAfter;
+					if(extras)
+					{
+						childCount = extras.length;
+						for(i = 0; i < childCount; i++)
+						{
+							child = extras[i];
+							this.setFocusManager(child);
+						}
+					}
+				}
 			}
 		}
 
@@ -232,7 +267,14 @@ package feathers.core
 			if(target is IFocusDisplayObject)
 			{
 				var targetWithFocus:IFocusDisplayObject = IFocusDisplayObject(target);
-				targetWithFocus.focusManager = null;
+				if(targetWithFocus.focusManager == this)
+				{
+					if(this._focus == targetWithFocus)
+					{
+						this.focus = null;
+					}
+					targetWithFocus.focusManager = null;
+				}
 			}
 			if(target is DisplayObjectContainer)
 			{
@@ -242,6 +284,30 @@ package feathers.core
 				{
 					var child:DisplayObject = container.getChildAt(i);
 					this.clearFocusManager(child);
+				}
+				if(container is IFocusExtras)
+				{
+					var containerWithExtras:IFocusExtras = IFocusExtras(container);
+					var extras:Vector.<DisplayObject> = containerWithExtras.focusExtrasBefore;
+					if(extras)
+					{
+						childCount = extras.length;
+						for(i = 0; i < childCount; i++)
+						{
+							child = extras[i];
+							this.clearFocusManager(child);
+						}
+					}
+					extras = containerWithExtras.focusExtrasAfter;
+					if(extras)
+					{
+						childCount = extras.length;
+						for(i = 0; i < childCount; i++)
+						{
+							child = extras[i];
+							this.clearFocusManager(child);
+						}
+					}
 				}
 			}
 		}
@@ -498,11 +564,7 @@ package feathers.core
 		 */
 		protected function isValidFocus(child:IFocusDisplayObject):Boolean
 		{
-			if(!child)
-			{
-				return false;
-			}
-			if(!child.isFocusEnabled)
+			if(!child || !child.isFocusEnabled || child.focusManager != this)
 			{
 				return false;
 			}
@@ -632,9 +694,38 @@ package feathers.core
 		/**
 		 * @private
 		 */
-		protected function focus_removedFromStageHandler(event:Event):void
+		protected function nativeFocus_focusOutHandler(event:FocusEvent):void
 		{
-			this.focus = null;
+			var nativeFocus:InteractiveObject = InteractiveObject(event.currentTarget);
+			var nativeStage:Stage = this._starling.nativeStage;
+			if(this._focus && !nativeStage.focus)
+			{
+				//if there's still a feathers focus, but the native stage object has
+				//lost focus for some reason, and there's no focus at all, force it
+				//back into focus.
+				//this can happen on app deactivate!
+				nativeStage.focus = this._nativeFocusTarget;
+			}
+			if(nativeFocus != nativeStage.focus)
+			{
+				//otherwise, we should stop listening for this event
+				nativeFocus.removeEventListener(FocusEvent.FOCUS_OUT, nativeFocus_focusOutHandler);
+			}
 		}
 	}
+}
+
+import flash.display.Sprite;
+
+class NativeFocusTarget extends Sprite
+{
+	public function NativeFocusTarget()
+	{
+		this.tabEnabled = true;
+		this.mouseEnabled = false;
+		this.mouseChildren = false;
+		this.alpha = 0;
+	}
+
+	public var referenceCount:int = 1;
 }

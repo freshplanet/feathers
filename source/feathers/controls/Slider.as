@@ -10,6 +10,7 @@ package feathers.controls
 	import feathers.core.FeathersControl;
 	import feathers.core.IFocusDisplayObject;
 	import feathers.core.PropertyProxy;
+	import feathers.events.ExclusiveTouch;
 	import feathers.events.FeathersEventType;
 	import feathers.skins.IStyleProvider;
 	import feathers.utils.math.clamp;
@@ -439,7 +440,7 @@ package feathers.controls
 		{
 			if(this._step != 0 && newValue != this._maximum && newValue != this._minimum)
 			{
-				newValue = roundToNearest(newValue, this._step);
+				newValue = roundToNearest(newValue - this._minimum, this._step) + this._minimum;
 			}
 			newValue = clamp(newValue, this._minimum, this._maximum);
 			if(this._value == newValue)
@@ -1502,7 +1503,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			if(isNaN(this.minimumTrackOriginalWidth) || isNaN(this.minimumTrackOriginalHeight))
+			if(this.minimumTrackOriginalWidth != this.minimumTrackOriginalWidth || //isNaN
+				this.minimumTrackOriginalHeight != this.minimumTrackOriginalHeight) //isNaN
 			{
 				this.minimumTrack.validate();
 				this.minimumTrackOriginalWidth = this.minimumTrack.width;
@@ -1510,7 +1512,8 @@ package feathers.controls
 			}
 			if(this.maximumTrack)
 			{
-				if(isNaN(this.maximumTrackOriginalWidth) || isNaN(this.maximumTrackOriginalHeight))
+				if(this.maximumTrackOriginalWidth != this.maximumTrackOriginalWidth || //isNaN
+					this.maximumTrackOriginalHeight != this.maximumTrackOriginalHeight) //isNaN
 				{
 					this.maximumTrack.validate();
 					this.maximumTrackOriginalWidth = this.maximumTrack.width;
@@ -1518,8 +1521,8 @@ package feathers.controls
 				}
 			}
 
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1904,7 +1907,11 @@ package feathers.controls
 		 */
 		protected function adjustPage():void
 		{
-			var page:Number = isNaN(this._page) ? this._step : this._page;
+			var page:Number = this._page;
+			if(page != page) //isNaN
+			{
+				page = this._step;
+			}
 			if(this._touchValue < this._value)
 			{
 				this.value = Math.max(this._touchValue, this._value - page);
@@ -2050,6 +2057,20 @@ package feathers.controls
 				}
 				if(touch.phase == TouchPhase.MOVED)
 				{
+					var exclusiveTouch:ExclusiveTouch = ExclusiveTouch.forStage(this.stage);
+					var claim:DisplayObject = exclusiveTouch.getClaim(this._touchPointID);
+					if(claim != this)
+					{
+						if(claim)
+						{
+							//already claimed by another display object
+							return;
+						}
+						else
+						{
+							exclusiveTouch.claimTouch(this._touchPointID, this);
+						}
+					}
 					touch.getLocation(this, HELPER_POINT);
 					this.value = this.locationToValue(HELPER_POINT);
 				}
@@ -2097,7 +2118,11 @@ package feathers.controls
 				this.value = this._maximum;
 				return;
 			}
-			var page:Number = isNaN(this._page) ? this._step : this._page;
+			var page:Number = this._page;
+			if(page != page) //isNaN
+			{
+				page = this._step;
+			}
 			if(this._direction == Slider.DIRECTION_VERTICAL)
 			{
 				if(event.keyCode == Keyboard.UP)
@@ -2155,6 +2180,12 @@ package feathers.controls
 		 */
 		protected function repeatTimer_timerHandler(event:TimerEvent):void
 		{
+			var exclusiveTouch:ExclusiveTouch = ExclusiveTouch.forStage(this.stage);
+			var claim:DisplayObject = exclusiveTouch.getClaim(this._touchPointID);
+			if(claim && claim != this)
+			{
+				return;
+			}
 			if(this._repeatTimer.currentCount < 5)
 			{
 				return;

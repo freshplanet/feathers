@@ -12,8 +12,11 @@ package feathers.controls.text
 	import feathers.skins.IStyleProvider;
 
 	import flash.display.BitmapData;
+	import flash.display3D.Context3DProfile;
+	import flash.filters.BitmapFilter;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.text.AntiAliasType;
 	import flash.text.GridFitType;
 	import flash.text.StyleSheet;
@@ -33,7 +36,7 @@ package feathers.controls.text
 	 * Renders text with a native <code>flash.text.TextField</code> and draws
 	 * it to <code>BitmapData</code> to convert to Starling textures. Textures
 	 * are completely managed by this component, and they will be automatically
-	 * disposed when the component is removed from the stage.
+	 * disposed when the component is disposed.
 	 *
 	 * <p>For longer passages of text, this component will stitch together
 	 * multiple individual textures both horizontally and vertically, as a grid,
@@ -57,6 +60,11 @@ package feathers.controls.text
 		private static const HELPER_MATRIX:Matrix = new Matrix();
 
 		/**
+		 * @private
+		 */
+		private static const HELPER_RECTANGLE:Rectangle = new Rectangle();
+
+		/**
 		 * The default <code>IStyleProvider</code> for all <code>TextFieldTextRenderer</code>
 		 * components.
 		 *
@@ -72,8 +80,6 @@ package feathers.controls.text
 		{
 			super();
 			this.isQuickHitAreaEnabled = true;
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
 		}
 
 		/**
@@ -97,12 +103,22 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		protected var _previousTextFieldWidth:Number = NaN;
+		protected var _textSnapshotOffsetX:Number = 0;
 
 		/**
 		 * @private
 		 */
-		protected var _previousTextFieldHeight:Number = NaN;
+		protected var _textSnapshotOffsetY:Number = 0;
+
+		/**
+		 * @private
+		 */
+		protected var _previousActualWidth:Number = NaN;
+
+		/**
+		 * @private
+		 */
+		protected var _previousActualHeight:Number = NaN;
 
 		/**
 		 * @private
@@ -373,8 +389,16 @@ package feathers.controls.text
 		 */
 		public function get baseline():Number
 		{
-			//2 is the gutter Flash Player adds
-			return 2 + this.textField.getLineMetrics(0).ascent;
+			if(!this.textField)
+			{
+				return 0;
+			}
+			var gutterDimensionsOffset:Number = 0;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 2;
+			}
+			return gutterDimensionsOffset + this.textField.getLineMetrics(0).ascent;
 		}
 
 		/**
@@ -565,6 +589,9 @@ package feathers.controls.text
 		/**
 		 * Specifies whether the text field has a border. Use the
 		 * <code>borderColor</code> property to set the border color.
+		 *
+		 * <p>Note: this property cannot be used when the <code>useGutter</code>
+		 * property is set to <code>false</code> (the default value!).</p>
 		 *
 		 * <p>In the following example, the border is enabled:</p>
 		 *
@@ -857,7 +884,11 @@ package feathers.controls.text
 		 */
 		public function set maxTextureDimensions(value:int):void
 		{
-			value = getNextPowerOfTwo(value);
+			//check if we can use rectangle textures or not
+			if(Starling.current.profile == Context3DProfile.BASELINE_CONSTRAINED)
+			{
+				value = getNextPowerOfTwo(value);
+			}
 			if(this._maxTextureDimensions == value)
 			{
 				return;
@@ -882,6 +913,8 @@ package feathers.controls.text
 		 * renderer.nativeFilters = [ new GlowFilter() ];</listing>
 		 *
 		 * @default null
+		 *
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/DisplayObject.html#filters Full description of flash.display.DisplayObject.filters in Adobe's Flash Platform API Reference
 		 */
 		public function get nativeFilters():Array
 		{
@@ -904,9 +937,69 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
+		protected var _useGutter:Boolean = false;
+
+		/**
+		 * Determines if the 2-pixel gutter around the edges of the
+		 * <code>flash.text.TextField</code> will be used in measurement and
+		 * layout. To visually align with other text renderers and text editors,
+		 * it is often best to leave the gutter disabled.
+		 *
+		 * <p>In the following example, the gutter is enabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.useGutter = true;</listing>
+		 *
+		 * @default false
+		 */
+		public function get useGutter():Boolean
+		{
+			return this._useGutter;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set useGutter(value:Boolean):void
+		{
+			if(this._useGutter == value)
+			{
+				return;
+			}
+			this._useGutter = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
+		 * @private
+		 */
 		override public function dispose():void
 		{
-			this.disposeContent();
+			if(this.textSnapshot)
+			{
+				this.textSnapshot.texture.dispose();
+				this.removeChild(this.textSnapshot, true);
+				this.textSnapshot = null;
+			}
+			if(this.textSnapshots)
+			{
+				var snapshotCount:int = this.textSnapshots.length;
+				for(var i:int = 0; i < snapshotCount; i++)
+				{
+					var snapshot:Image = this.textSnapshots[i];
+					snapshot.texture.dispose();
+					this.removeChild(snapshot, true);
+				}
+				this.textSnapshots = null;
+			}
+
+			this._previousActualWidth = NaN;
+			this._previousActualHeight = NaN;
+
+			this._needsNewTexture = false;
+			this._snapshotWidth = 0;
+			this._snapshotHeight = 0;
+
 			super.dispose();
 		}
 
@@ -920,12 +1013,13 @@ package feathers.controls.text
 				if(this._snapToPixels)
 				{
 					this.getTransformationMatrix(this.stage, HELPER_MATRIX);
-					this.textSnapshot.x = Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx;
-					this.textSnapshot.y = Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
+					this.textSnapshot.x = this._textSnapshotOffsetX + Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx;
+					this.textSnapshot.y = this._textSnapshotOffsetY + Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
 				}
 				else
 				{
-					this.textSnapshot.x = this.textSnapshot.y = 0;
+					this.textSnapshot.x = this._textSnapshotOffsetX;
+					this.textSnapshot.y = this._textSnapshotOffsetY;
 				}
 			}
 			super.render(support, parentAlpha);
@@ -971,6 +1065,9 @@ package feathers.controls.text
 			if(!this.textField)
 			{
 				this.textField = new TextField();
+				var scaleFactor:Number = Starling.contentScaleFactor;
+				this.textField.scaleX = scaleFactor;
+				this.textField.scaleY = scaleFactor;
 				this.textField.mouseEnabled = this.textField.mouseWheelEnabled = false;
 				this.textField.selectable = false;
 				this.textField.multiline = true;
@@ -1063,6 +1160,13 @@ package feathers.controls.text
 			this.textField.autoSize = TextFieldAutoSize.LEFT;
 			this.textField.wordWrap = false;
 
+			var scaleFactor:Number = Starling.contentScaleFactor;
+			var gutterDimensionsOffset:Number = 4;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 0;
+			}
+
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
@@ -1071,12 +1175,7 @@ package feathers.controls.text
 				//first time results in an incorrect value, but if you query it
 				//again, for some reason, it reports the correct width value.
 				var hackWorkaround:Number = this.textField.width;
-
-				//we use Math.ceil() as another workaround. even though we're
-				//setting width to exact same value reported here when we turn
-				//on word wrap in a moment, sometimes the last character moves
-				//to the next line. Bumping up to a whole pixel seems to help.
-				newWidth = Math.ceil(this.textField.width);
+				newWidth = (this.textField.width / scaleFactor) - gutterDimensionsOffset;
 				if(newWidth < this._minWidth)
 				{
 					newWidth = this._minWidth;
@@ -1091,15 +1190,15 @@ package feathers.controls.text
 			//width getter (when TextFieldAutoSize.LEFT is used) to the width
 			//setter. In other words, the value technically isn't changing, but
 			//TextField behaves differently.
-			if(!needsWidth || this.textField.width > newWidth)
+			if(!needsWidth || ((this.textField.width / scaleFactor) - gutterDimensionsOffset) > newWidth)
 			{
-				this.textField.width = newWidth;
+				this.textField.width = newWidth + gutterDimensionsOffset;
 				this.textField.wordWrap = this._wordWrap;
 			}
 			var newHeight:Number = this.explicitHeight;
 			if(needsHeight)
 			{
-				newHeight = Math.ceil(this.textField.height);
+				newHeight = (this.textField.height / scaleFactor) - gutterDimensionsOffset;
 				if(newHeight < this._minHeight)
 				{
 					newHeight = this._minHeight;
@@ -1114,8 +1213,8 @@ package feathers.controls.text
 
 			//put the width and height back just in case we measured without
 			//a full validation
-			this.textField.width = this.actualWidth;
-			this.textField.height = this.actualHeight;
+			this.textField.width = this.actualWidth + gutterDimensionsOffset;
+			this.textField.height = this.actualHeight + gutterDimensionsOffset;
 
 			result.x = newWidth;
 			result.y = newHeight;
@@ -1132,40 +1231,76 @@ package feathers.controls.text
 			var stylesInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_STYLES);
 			var dataInvalid:Boolean = this.isInvalid(INVALIDATION_FLAG_DATA);
 
+			var scaleFactor:Number = Starling.contentScaleFactor;
+			var gutterDimensionsOffset:Number = 4;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 0;
+			}
+
 			//if measure() isn't called, we need to apply the same workaround
 			//for the flash.text.TextField bug with wordWrap.
 			if(!this._hasMeasured && this._wordWrap && this.explicitWidth != this.explicitWidth)
 			{
 				this.textField.autoSize = TextFieldAutoSize.LEFT;
 				this.textField.wordWrap = false;
-				if(this.textField.width > this.actualWidth)
+				if(((this.textField.width / scaleFactor) - gutterDimensionsOffset) > this.actualWidth)
 				{
 					this.textField.wordWrap = true;
 				}
 				this.textField.autoSize = TextFieldAutoSize.NONE;
-				this.textField.width = this.actualWidth;
+				this.textField.width = this.actualWidth + gutterDimensionsOffset;
 			}
 			if(sizeInvalid)
 			{
-				this.textField.width = this.actualWidth;
-				this.textField.height = this.actualHeight;
-				var rectangleSnapshotWidth:Number = this.actualWidth * Starling.contentScaleFactor;
-				if(rectangleSnapshotWidth > this._maxTextureDimensions)
+				this.textField.width = this.actualWidth + gutterDimensionsOffset;
+				this.textField.height = this.actualHeight + gutterDimensionsOffset;
+				var canUseRectangleTexture:Boolean = Starling.current.profile != Context3DProfile.BASELINE_CONSTRAINED;
+				var rectangleSnapshotWidth:Number = this.actualWidth * scaleFactor;
+				if(canUseRectangleTexture)
 				{
-					this._snapshotWidth = int(rectangleSnapshotWidth / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotWidth % this._maxTextureDimensions);
+					if(rectangleSnapshotWidth > this._maxTextureDimensions)
+					{
+						this._snapshotWidth = int(rectangleSnapshotWidth / this._maxTextureDimensions) * this._maxTextureDimensions + (rectangleSnapshotWidth % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotWidth = rectangleSnapshotWidth;
+					}
 				}
 				else
 				{
-					this._snapshotWidth = getNextPowerOfTwo(rectangleSnapshotWidth);
+					if(rectangleSnapshotWidth > this._maxTextureDimensions)
+					{
+						this._snapshotWidth = int(rectangleSnapshotWidth / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotWidth % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotWidth = getNextPowerOfTwo(rectangleSnapshotWidth);
+					}
 				}
-				var rectangleSnapshotHeight:Number = this.actualHeight * Starling.contentScaleFactor;
-				if(rectangleSnapshotHeight > this._maxTextureDimensions)
+				var rectangleSnapshotHeight:Number = this.actualHeight * scaleFactor;
+				if(canUseRectangleTexture)
 				{
-					this._snapshotHeight = int(rectangleSnapshotHeight / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotHeight % this._maxTextureDimensions);
+					if(rectangleSnapshotHeight > this._maxTextureDimensions)
+					{
+						this._snapshotHeight = int(rectangleSnapshotHeight / this._maxTextureDimensions) * this._maxTextureDimensions + (rectangleSnapshotHeight % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotHeight = rectangleSnapshotHeight;
+					}
 				}
 				else
 				{
-					this._snapshotHeight = getNextPowerOfTwo(rectangleSnapshotHeight);
+					if(rectangleSnapshotHeight > this._maxTextureDimensions)
+					{
+						this._snapshotHeight = int(rectangleSnapshotHeight / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotHeight % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotHeight = getNextPowerOfTwo(rectangleSnapshotHeight);
+					}
 				}
 				var textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
 				this._needsNewTexture = this._needsNewTexture || !this.textSnapshot || this._snapshotWidth != textureRoot.width || this._snapshotHeight != textureRoot.height;
@@ -1175,11 +1310,11 @@ package feathers.controls.text
 			//changing maxWidth or something for measurement, we check against
 			//the previous actualWidth/Height used for the snapshot.
 			if(stylesInvalid || dataInvalid || this._needsNewTexture ||
-				this.actualWidth != this._previousTextFieldWidth ||
-				this.actualHeight != this._previousTextFieldHeight)
+				this.actualWidth != this._previousActualWidth ||
+				this.actualHeight != this._previousActualHeight)
 			{
-				this._previousTextFieldWidth = this.actualWidth;
-				this._previousTextFieldHeight = this.actualHeight;
+				this._previousActualWidth = this.actualWidth;
+				this._previousActualHeight = this.actualHeight;
 				var hasText:Boolean = this._text.length > 0;
 				if(hasText)
 				{
@@ -1189,7 +1324,7 @@ package feathers.controls.text
 				}
 				if(this.textSnapshot)
 				{
-					this.textSnapshot.visible = hasText;
+					this.textSnapshot.visible = hasText && this._snapshotWidth > 0 && this._snapshotHeight > 0;
 				}
 			}
 		}
@@ -1226,6 +1361,49 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
+		protected function measureNativeFilters(bitmapData:BitmapData, result:Rectangle = null):Rectangle
+		{
+			if(!result)
+			{
+				result = new Rectangle();
+			}
+			var resultX:Number = 0;
+			var resultY:Number = 0;
+			var resultWidth:Number = 0;
+			var resultHeight:Number = 0;
+			var filterCount:int = this._nativeFilters.length;
+			for(var i:int = 0; i < filterCount; i++)
+			{
+				var filter:BitmapFilter = this._nativeFilters[i];
+				var filterRect:Rectangle = bitmapData.generateFilterRect(bitmapData.rect, filter);
+				var filterX:Number = filterRect.x;
+				var filterY:Number = filterRect.y;
+				var filterWidth:Number = filterRect.width;
+				var filterHeight:Number = filterRect.height;
+				if(resultX > filterX)
+				{
+					resultX = filterX;
+				}
+				if(resultY > filterY)
+				{
+					resultY = filterY;
+				}
+				if(resultWidth < filterWidth)
+				{
+					resultWidth = filterWidth;
+				}
+				if(resultHeight < filterHeight)
+				{
+					resultHeight = filterHeight;
+				}
+			}
+			result.setTo(resultX, resultY, resultWidth, resultHeight);
+			return result;
+		}
+
+		/**
+		 * @private
+		 */
 		protected function texture_onRestore():void
 		{
 			this.refreshSnapshot();
@@ -1236,7 +1414,7 @@ package feathers.controls.text
 		 */
 		protected function refreshSnapshot():void
 		{
-			if(this._snapshotWidth == 0 || this._snapshotHeight == 0)
+			if(this._snapshotWidth <= 0 || this._snapshotHeight <= 0)
 			{
 				return;
 			}
@@ -1249,6 +1427,13 @@ package feathers.controls.text
 			var yPosition:Number = 0;
 			var bitmapData:BitmapData;
 			var snapshotIndex:int = -1;
+			var useNativeFilters:Boolean = this._nativeFilters && this._nativeFilters.length > 0 &&
+				totalBitmapWidth <= this._maxTextureDimensions && totalBitmapHeight <= this._maxTextureDimensions;
+			var gutterPositionOffset:Number = 2 * scaleFactor;
+			if(this._useGutter)
+			{
+				gutterPositionOffset = 0;
+			}
 			do
 			{
 				var currentBitmapWidth:Number = totalBitmapWidth;
@@ -1276,9 +1461,37 @@ package feathers.controls.text
 						//clear the bitmap data and reuse it
 						bitmapData.fillRect(bitmapData.rect, 0x00ff00ff);
 					}
-					HELPER_MATRIX.tx = -xPosition;
-					HELPER_MATRIX.ty = -yPosition;
-					bitmapData.draw(this.textField, HELPER_MATRIX);
+					HELPER_MATRIX.tx = -(xPosition + gutterPositionOffset);
+					HELPER_MATRIX.ty = -(yPosition + gutterPositionOffset);
+					HELPER_RECTANGLE.setTo(0, 0, this.actualWidth * scaleFactor, this.actualHeight * scaleFactor);
+					bitmapData.draw(this.textField, HELPER_MATRIX, null, null, HELPER_RECTANGLE);
+					if(useNativeFilters)
+					{
+						this.measureNativeFilters(bitmapData, HELPER_RECTANGLE);
+						if(bitmapData.rect.equals(HELPER_RECTANGLE))
+						{
+							this._textSnapshotOffsetX = 0;
+							this._textSnapshotOffsetY = 0;
+						}
+						else
+						{
+							HELPER_MATRIX.tx -= HELPER_RECTANGLE.x;
+							HELPER_MATRIX.ty -= HELPER_RECTANGLE.y;
+							var newBitmapData:BitmapData = new BitmapData(HELPER_RECTANGLE.width, HELPER_RECTANGLE.height, true, 0x00ff00ff);
+							this._textSnapshotOffsetX = HELPER_RECTANGLE.x;
+							this._textSnapshotOffsetY = HELPER_RECTANGLE.y;
+							HELPER_RECTANGLE.x = 0;
+							HELPER_RECTANGLE.y = 0;
+							newBitmapData.draw(this.textField, HELPER_MATRIX, null, null, HELPER_RECTANGLE);
+							bitmapData.dispose();
+							bitmapData = newBitmapData;
+						}
+					}
+					else
+					{
+						this._textSnapshotOffsetX = 0;
+						this._textSnapshotOffsetY = 0;
+					}
 					var newTexture:Texture;
 					if(!this.textSnapshot || this._needsNewTexture)
 					{
@@ -1363,58 +1576,6 @@ package feathers.controls.text
 				}
 			}
 			this._needsNewTexture = false;
-		}
-
-		/**
-		 * @private
-		 */
-		protected function disposeContent():void
-		{
-			if(this.textSnapshot)
-			{
-				this.textSnapshot.texture.dispose();
-				this.removeChild(this.textSnapshot, true);
-				this.textSnapshot = null;
-			}
-			if(this.textSnapshots)
-			{
-				var snapshotCount:int = this.textSnapshots.length;
-				for(var i:int = 0; i < snapshotCount; i++)
-				{
-					var snapshot:Image = this.textSnapshots[i];
-					snapshot.texture.dispose();
-					this.removeChild(snapshot, true);
-				}
-				this.textSnapshots = null;
-			}
-
-			this._previousTextFieldWidth = NaN;
-			this._previousTextFieldHeight = NaN;
-
-			this._needsNewTexture = false;
-			this._snapshotWidth = 0;
-			this._snapshotHeight = 0;
-		}
-
-		/**
-		 * @private
-		 */
-		protected function addedToStageHandler(event:Event):void
-		{
-			//we need to invalidate in order to get a fresh snapshot
-			this.invalidate(INVALIDATION_FLAG_SIZE);
-		}
-
-		/**
-		 * @private
-		 */
-		protected function removedFromStageHandler(event:Event):void
-		{
-			this.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
-
-			//avoid the need to call dispose(). we'll create a new snapshot
-			//when the renderer is added to stage again.
-			this.disposeContent();
 		}
 
 		/**

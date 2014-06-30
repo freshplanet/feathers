@@ -10,6 +10,8 @@ package feathers.controls
 	import feathers.core.FeathersControl;
 	import feathers.core.IFeathersControl;
 	import feathers.core.IFocusDisplayObject;
+	import feathers.core.IMultilineTextEditor;
+	import feathers.core.ITextBaselineControl;
 	import feathers.core.ITextEditor;
 	import feathers.core.ITextRenderer;
 	import feathers.core.IValidating;
@@ -19,10 +21,12 @@ package feathers.controls
 	import feathers.skins.StateValueSelector;
 
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursor;
 
 	import starling.display.DisplayObject;
+	import starling.display.DisplayObjectContainer;
 	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
@@ -190,7 +194,7 @@ package feathers.controls
 	 * @see http://wiki.starling-framework.org/feathers/text-editors
 	 * @see feathers.core.ITextEditor
 	 */
-	public class TextInput extends FeathersControl implements IFocusDisplayObject
+	public class TextInput extends FeathersControl implements IFocusDisplayObject, ITextBaselineControl
 	{
 		/**
 		 * @private
@@ -240,24 +244,24 @@ package feathers.controls
 		public static const ALTERNATE_NAME_SEARCH_TEXT_INPUT:String = "feathers-search-text-input";
 
 		/**
-		 * The text editor will be aligned vertically to the top edge of the
-		 * text input.
+		 * The text editor, icon, and prompt will be aligned vertically to the
+		 * top edge of the text input.
 		 *
 		 * @see #verticalAlign
 		 */
 		public static const VERTICAL_ALIGN_TOP:String = "top";
 
 		/**
-		 * The text editor will be aligned vertically to the middle of the text
-		 * input.
+		 * The text editor, icon, and prompt will be aligned vertically to the
+		 * middle of the text input.
 		 *
 		 * @see #verticalAlign
 		 */
 		public static const VERTICAL_ALIGN_MIDDLE:String = "middle";
 
 		/**
-		 * The text editor will be aligned vertically to the bottom edge of the
-		 * text input.
+		 * The text editor, icon, and prompt will be aligned vertically to the
+		 * bottom edge of the text input.
 		 *
 		 * @see #verticalAlign
 		 */
@@ -286,7 +290,6 @@ package feathers.controls
 		public function TextInput()
 		{
 			super();
-			this.isQuickHitAreaEnabled = true;
 			this.addEventListener(TouchEvent.TOUCH, textInput_touchHandler);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, textInput_removedFromStageHandler);
 		}
@@ -477,6 +480,18 @@ package feathers.controls
 		}
 
 		/**
+		 * The baseline measurement of the text, in pixels.
+		 */
+		public function get baseline():Number
+		{
+			if(!this.textEditor)
+			{
+				return 0;
+			}
+			return this.textEditor.y + this.textEditor.baseline;
+		}
+
+		/**
 		 * @private
 		 */
 		protected var _prompt:String;
@@ -592,7 +607,7 @@ package feathers.controls
 		 * restricted:</p>
 		 *
 		 * <listing version="3.0">
-		 * input.restrict = "0-9;</listing>
+		 * input.restrict = "0-9";</listing>
 		 *
 		 * @default null
 		 */
@@ -1571,6 +1586,23 @@ package feathers.controls
 		}
 
 		/**
+		 * @private
+		 */
+		override public function hitTest(localPoint:Point, forTouch:Boolean = false):DisplayObject
+		{
+			if(forTouch && (!this.visible || !this.touchable))
+			{
+				return null;
+			}
+			var clipRect:Rectangle = this.clipRect;
+			if(clipRect && !clipRect.containsPoint(localPoint))
+			{
+				return null;
+			}
+			return this._hitArea.containsPoint(localPoint) ? DisplayObject(this.textEditor) : null;
+		}
+
+		/**
 		 * @inheritDoc
 		 */
 		override public function showFocus():void
@@ -1588,7 +1620,10 @@ package feathers.controls
 		 */
 		public function setFocus():void
 		{
-			if(this._textEditorHasFocus || !this.visible)
+			//if the text editor has focus, no need to set focus
+			//if this is invisible, it wouldn't make sense to set focus
+			//if there's a touch point ID, we'll be setting focus on our own
+			if(this._textEditorHasFocus || !this.visible || this._touchPointID >= 0)
 			{
 				return;
 			}
@@ -1754,8 +1789,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1790,13 +1825,22 @@ package feathers.controls
 			if(needsWidth)
 			{
 				newWidth = Math.max(this._originalSkinWidth, typicalTextWidth + this._paddingLeft + this._paddingRight);
+				if(newWidth != newWidth) //isNaN
+				{
+					newWidth = 0;
+				}
 			}
 			if(needsHeight)
 			{
 				newHeight = Math.max(this._originalSkinHeight, typicalTextHeight + this._paddingTop + this._paddingBottom);
+				if(newHeight != newHeight) //isNaN
+				{
+					newHeight = 0;
+				}
 			}
 
-			if(this._typicalText && this._verticalAlign == VERTICAL_ALIGN_JUSTIFY)
+			var isMultiline:Boolean = this.textEditor is IMultilineTextEditor && IMultilineTextEditor(this.textEditor).multiline;
+			if(this._typicalText && (this._verticalAlign == VERTICAL_ALIGN_JUSTIFY || isMultiline))
 			{
 				this.textEditor.width = oldTextEditorWidth;
 				this.textEditor.height = oldTextEditorHeight;
@@ -1940,7 +1984,9 @@ package feathers.controls
 					this.addChildAt(this.currentBackground, 0);
 				}
 			}
-			if(this.currentBackground && (isNaN(this._originalSkinWidth) || isNaN(this._originalSkinHeight)))
+			if(this.currentBackground &&
+				(this._originalSkinWidth != this._originalSkinWidth || //isNaN
+					this._originalSkinHeight != this._originalSkinHeight)) //isNaN
 			{
 				if(this.currentBackground is IValidating)
 				{
@@ -2020,50 +2066,83 @@ package feathers.controls
 			this.textEditor.width = this.actualWidth - this._paddingRight - this.textEditor.x;
 			this.promptTextRenderer.width = this.actualWidth - this._paddingRight - this.promptTextRenderer.x;
 
+			var isMultiline:Boolean = this.textEditor is IMultilineTextEditor && IMultilineTextEditor(this.textEditor).multiline;
+			if(isMultiline || this._verticalAlign == VERTICAL_ALIGN_JUSTIFY)
+			{
+				//multiline is treated the same as justify
+				this.textEditor.height = this.actualHeight - this._paddingTop - this._paddingBottom;
+			}
+			else
+			{
+				//clear the height and auto-size instead
+				this.textEditor.height = NaN;
+			}
 			this.textEditor.validate();
 			this.promptTextRenderer.validate();
 
-			switch(this._verticalAlign)
+			var biggerHeight:Number = this.textEditor.height;
+			var biggerBaseline:Number = this.textEditor.baseline;
+			if(this.promptTextRenderer.baseline > baseline)
 			{
-				case VERTICAL_ALIGN_JUSTIFY:
+				biggerBaseline = this.promptTextRenderer.baseline;
+			}
+			if(this.promptTextRenderer.height > biggerHeight)
+			{
+				biggerHeight = this.promptTextRenderer.height;
+			}
+
+			if(isMultiline)
+			{
+				this.promptTextRenderer.y = this._paddingTop + biggerBaseline - this.promptTextRenderer.baseline;
+				this.promptTextRenderer.height = this.actualHeight - this.promptTextRenderer.y - this._paddingBottom;
+				if(this.currentIcon)
 				{
-					this.textEditor.y = this._paddingTop;
-					this.textEditor.height = this.actualHeight - this._paddingTop - this._paddingBottom;
-					this.promptTextRenderer.y = this._paddingTop;
-					this.promptTextRenderer.height = this.actualHeight - this._paddingTop - this._paddingBottom;
-					if(this.currentIcon)
-					{
-						this.currentIcon.y = this._paddingTop;
-					}
-					break;
+					this.currentIcon.y = this._paddingTop;
 				}
-				case VERTICAL_ALIGN_TOP:
+			}
+			else
+			{
+				switch(this._verticalAlign)
 				{
-					this.textEditor.y = this._paddingTop;
-					this.promptTextRenderer.y = this._paddingTop;
-					if(this.currentIcon)
+					case VERTICAL_ALIGN_JUSTIFY:
 					{
-						this.currentIcon.y = this._paddingTop;
+						this.textEditor.y = this._paddingTop + biggerBaseline - this.textEditor.baseline;
+						this.promptTextRenderer.y = this._paddingTop + biggerBaseline - this.promptTextRenderer.baseline;
+						this.promptTextRenderer.height = this.actualHeight - this.promptTextRenderer.y - this._paddingBottom;
+						if(this.currentIcon)
+						{
+							this.currentIcon.y = this._paddingTop;
+						}
+						break;
 					}
-					break;
-				}
-				case VERTICAL_ALIGN_BOTTOM:
-				{
-					this.textEditor.y = this.actualHeight - this._paddingBottom - this.textEditor.height;
-					this.promptTextRenderer.y = this.actualHeight - this._paddingBottom - this.promptTextRenderer.height;
-					if(this.currentIcon)
+					case VERTICAL_ALIGN_TOP:
 					{
-						this.currentIcon.y = this.actualHeight - this._paddingBottom - this.currentIcon.height;
+						this.textEditor.y = this._paddingTop + biggerBaseline - this.textEditor.baseline;
+						this.promptTextRenderer.y = this._paddingTop + biggerBaseline - this.promptTextRenderer.baseline;
+						if(this.currentIcon)
+						{
+							this.currentIcon.y = this._paddingTop;
+						}
+						break;
 					}
-					break;
-				}
-				default:
-				{
-					this.textEditor.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - this.textEditor.height) / 2;
-					this.promptTextRenderer.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - this.promptTextRenderer.height) / 2;
-					if(this.currentIcon)
+					case VERTICAL_ALIGN_BOTTOM:
 					{
-						this.currentIcon.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - this.currentIcon.height) / 2;
+						this.textEditor.y = this.actualHeight - this._paddingBottom - biggerHeight + biggerBaseline - this.textEditor.baseline;
+						this.promptTextRenderer.y = this.actualHeight - this._paddingBottom - biggerHeight + biggerBaseline - this.promptTextRenderer.baseline;
+						if(this.currentIcon)
+						{
+							this.currentIcon.y = this.actualHeight - this._paddingBottom - this.currentIcon.height;
+						}
+						break;
+					}
+					default: //middle
+					{
+						this.textEditor.y = biggerBaseline - this.textEditor.baseline + this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - biggerHeight) / 2;
+						this.promptTextRenderer.y = biggerBaseline - this.promptTextRenderer.baseline + this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - biggerHeight) / 2;
+						if(this.currentIcon)
+						{
+							this.currentIcon.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - this.currentIcon.height) / 2;
+						}
 					}
 				}
 			}
@@ -2080,11 +2159,9 @@ package feathers.controls
 			}
 			touch.getLocation(this.stage, HELPER_POINT);
 			var isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
-			if(!this._textEditorHasFocus && isInBounds)
+			if(isInBounds && !this._textEditorHasFocus)
 			{
-				this.globalToLocal(HELPER_POINT, HELPER_POINT);
-				HELPER_POINT.x -= this._paddingLeft;
-				HELPER_POINT.y -= this._paddingTop;
+				this.textEditor.globalToLocal(HELPER_POINT, HELPER_POINT);
 				this._isWaitingToSetFocus = false;
 				this.textEditor.setFocus(HELPER_POINT);
 			}
@@ -2103,6 +2180,10 @@ package feathers.controls
 		 */
 		protected function textInput_removedFromStageHandler(event:Event):void
 		{
+			if(!this._focusManager && this._textEditorHasFocus)
+			{
+				this.clearFocus();
+			}
 			this._textEditorHasFocus = false;
 			this._isWaitingToSetFocus = false;
 			this._touchPointID = -1;
@@ -2220,7 +2301,6 @@ package feathers.controls
 		 */
 		protected function textEditor_focusInHandler(event:Event):void
 		{
-			this._touchPointID = -1;
 			if(!this.visible)
 			{
 				this.textEditor.clearFocus();
@@ -2245,7 +2325,7 @@ package feathers.controls
 		{
 			this._textEditorHasFocus = false;
 			this.currentState = this._isEnabled ? STATE_ENABLED : STATE_DISABLED;
-			if(this._focusManager)
+			if(this._focusManager && this._isFocusEnabled)
 			{
 				if(this._focusManager.focus == this)
 				{

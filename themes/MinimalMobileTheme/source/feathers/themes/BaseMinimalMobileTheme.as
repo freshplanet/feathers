@@ -60,6 +60,7 @@ package feathers.themes
 	import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
 	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.text.BitmapFontTextEditor;
 	import feathers.controls.text.BitmapFontTextRenderer;
 	import feathers.controls.text.StageTextTextEditor;
 	import feathers.core.FeathersControl;
@@ -140,6 +141,18 @@ package feathers.themes
 		protected static function textEditorFactory():StageTextTextEditor
 		{
 			return new StageTextTextEditor();
+		}
+
+		protected static function numericStepperTextEditorFactory():BitmapFontTextEditor
+		{
+			//we're only using this text editor in the NumericStepper because
+			//isEditable is false on the TextInput. this text editor is not
+			//suitable for mobile use if the TextInput needs to be editable
+			//because it can't use the soft keyboard or other mobile-friendly UI
+			var editor:BitmapFontTextEditor = new BitmapFontTextEditor();
+			//since it's a pixel font, we don't want to smooth it.
+			editor.smoothing = TextureSmoothing.NONE;
+			return editor;
 		}
 
 		protected static function popUpOverlayFactory():DisplayObject
@@ -261,6 +274,7 @@ package feathers.themes
 
 		protected var primaryTextFormat:BitmapFontTextFormat;
 		protected var disabledTextFormat:BitmapFontTextFormat;
+		protected var centeredTextFormat:BitmapFontTextFormat;
 		protected var headingTextFormat:BitmapFontTextFormat;
 		protected var headingDisabledTextFormat:BitmapFontTextFormat;
 		protected var detailTextFormat:BitmapFontTextFormat;
@@ -398,6 +412,7 @@ package feathers.themes
 
 			this.primaryTextFormat = new BitmapFontTextFormat(FONT_NAME, this.fontSize, PRIMARY_TEXT_COLOR);
 			this.disabledTextFormat = new BitmapFontTextFormat(FONT_NAME, this.fontSize, DISABLED_TEXT_COLOR);
+			this.centeredTextFormat = new BitmapFontTextFormat(FONT_NAME, this.fontSize, PRIMARY_TEXT_COLOR, TextFormatAlign.CENTER);
 			this.headingTextFormat = new BitmapFontTextFormat(FONT_NAME, this.headingFontSize, PRIMARY_TEXT_COLOR);
 			this.headingDisabledTextFormat = new BitmapFontTextFormat(FONT_NAME, this.headingFontSize, DISABLED_TEXT_COLOR);
 			this.detailTextFormat = new BitmapFontTextFormat(FONT_NAME, this.detailFontSize, PRIMARY_TEXT_COLOR);
@@ -463,6 +478,8 @@ package feathers.themes
 			//numeric stepper
 			this.getStyleProviderForClass(NumericStepper).defaultStyleFunction = this.setNumericStepperStyles;
 			this.getStyleProviderForClass(TextInput).setFunctionForStyleName(NumericStepper.DEFAULT_CHILD_NAME_TEXT_INPUT, this.setNumericStepperTextInputStyles);
+			this.getStyleProviderForClass(Button).setFunctionForStyleName(NumericStepper.DEFAULT_CHILD_NAME_DECREMENT_BUTTON, this.setNumericStepperButtonStyles);
+			this.getStyleProviderForClass(Button).setFunctionForStyleName(NumericStepper.DEFAULT_CHILD_NAME_INCREMENT_BUTTON, this.setNumericStepperButtonStyles);
 
 			//page indicator
 			this.getStyleProviderForClass(PageIndicator).defaultStyleFunction = this.setPageIndicatorStyles;
@@ -592,10 +609,7 @@ package feathers.themes
 			group.horizontalAlign = ButtonGroup.HORIZONTAL_ALIGN_JUSTIFY;
 			group.verticalAlign = ButtonGroup.VERTICAL_ALIGN_JUSTIFY;
 			group.gap = 14 * this.scale;
-			group.paddingTop = 14 * this.scale;
-			group.paddingRight = 14 * this.scale;
-			group.paddingBottom = 14 * this.scale;
-			group.paddingLeft = 14 * this.scale;
+			group.padding = 14 * this.scale;
 		}
 
 		protected function setAlertMessageTextRendererStyles(renderer:BitmapFontTextRenderer):void
@@ -781,8 +795,7 @@ package feathers.themes
 		{
 			callout.minWidth = 20 * this.scale;
 			callout.minHeight = 20 * this.scale;
-			callout.paddingTop = callout.paddingRight = callout.paddingBottom =
-				callout.paddingLeft = 12 * this.scale;
+			callout.padding = 12 * this.scale;
 			var backgroundSkin:Scale9Image = new Scale9Image(popUpBackgroundSkinTextures, this.scale);
 			backgroundSkin.width = 20 * this.scale;
 			backgroundSkin.height = 20 * this.scale;
@@ -912,8 +925,7 @@ package feathers.themes
 		{
 			header.minWidth = 88 * this.scale;
 			header.minHeight = 88 * this.scale;
-			header.paddingTop = header.paddingRight = header.paddingBottom =
-				header.paddingLeft = 14 * this.scale;
+			header.padding = 14 * this.scale;
 			header.gap = 8 * this.scale;
 			header.titleGap = 12 * this.scale;
 			var backgroundSkin:Scale9Image = new Scale9Image(headerSkinTextures, this.scale);
@@ -1021,10 +1033,8 @@ package feathers.themes
 			input.paddingTop = input.paddingBottom = 14 * this.scale;
 			input.paddingLeft = input.paddingRight = 16 * this.scale;
 			input.isEditable = false;
-			input.textEditorProperties.fontFamily = "_sans";
-			input.textEditorProperties.fontSize = this.inputFontSize;
-			input.textEditorProperties.color = PRIMARY_TEXT_COLOR;
-			input.textEditorProperties.textAlign = TextFormatAlign.CENTER;
+			input.textEditorFactory = numericStepperTextEditorFactory;
+			input.textEditorProperties.textFormat = this.centeredTextFormat;
 
 			var backgroundSkin:Scale9Image = new Scale9Image(insetBackgroundSkinTextures, this.scale);
 			backgroundSkin.width = 66 * this.scale;
@@ -1037,6 +1047,12 @@ package feathers.themes
 			input.backgroundDisabledSkin = backgroundDisabledSkin;
 		}
 
+		protected function setNumericStepperButtonStyles(button:Button):void
+		{
+			this.setButtonStyles(button);
+			button.keepDownStateOnRollOut = true;
+		}
+
 	//-------------------------
 	// PageIndicator
 	//-------------------------
@@ -1046,8 +1062,7 @@ package feathers.themes
 			pageIndicator.normalSymbolFactory = this.pageIndicatorNormalSymbolFactory;
 			pageIndicator.selectedSymbolFactory = this.pageIndicatorSelectedSymbolFactory;
 			pageIndicator.gap = 12 * this.scale;
-			pageIndicator.paddingTop = pageIndicator.paddingRight = pageIndicator.paddingBottom =
-				pageIndicator.paddingLeft = 12 * this.scale;
+			pageIndicator.padding = 12 * this.scale;
 			pageIndicator.minTouchWidth = pageIndicator.minTouchHeight = 44 * this.scale;
 		}
 
@@ -1064,8 +1079,7 @@ package feathers.themes
 			backgroundSkin.height = 20 * this.scale;
 			panel.backgroundSkin = backgroundSkin;
 
-			panel.paddingTop = panel.paddingRight = panel.paddingBottom =
-				panel.paddingLeft = 14 * this.scale;
+			panel.padding = 14 * this.scale;
 		}
 
 		protected function setPanelHeaderStyles(header:Header):void
@@ -1125,8 +1139,7 @@ package feathers.themes
 			layout.horizontalAlign = VerticalLayout.HORIZONTAL_ALIGN_JUSTIFY;
 			layout.useVirtualLayout = true;
 			layout.gap = 0;
-			layout.paddingTop = layout.paddingRight = layout.paddingBottom =
-				layout.paddingLeft = 0;
+			layout.padding = 0;
 			list.listProperties.layout = layout;
 			list.listProperties.verticalScrollPolicy = List.SCROLL_POLICY_ON;
 
@@ -1141,8 +1154,7 @@ package feathers.themes
 				backgroundSkin.width = 20 * this.scale;
 				backgroundSkin.height = 20 * this.scale;
 				list.listProperties.backgroundSkin = backgroundSkin;
-				list.listProperties.paddingTop = list.listProperties.paddingRight =
-					list.listProperties.paddingBottom = list.listProperties.paddingLeft = 4 * this.scale;
+				list.listProperties.padding = 4 * this.scale;
 			}
 
 			list.listProperties.itemRendererName = THEME_NAME_PICKER_LIST_ITEM_RENDERER;
@@ -1326,8 +1338,7 @@ package feathers.themes
 			if(!container.layout)
 			{
 				var layout:HorizontalLayout = new HorizontalLayout();
-				layout.paddingTop = layout.paddingRight = layout.paddingBottom =
-					layout.paddingLeft = 14 * this.scale;
+				layout.padding = 14 * this.scale;
 				layout.gap = 8 * this.scale;
 				container.layout = layout;
 			}
@@ -1456,8 +1467,7 @@ package feathers.themes
 			tab.selectedDisabledLabelProperties.textFormat = this.disabledTextFormat;
 
 			tab.iconPosition = Button.ICON_POSITION_TOP;
-			tab.paddingTop = tab.paddingRight = tab.paddingBottom =
-				tab.paddingLeft = 28 * this.scale;
+			tab.padding = 28 * this.scale;
 			tab.gap = 12 * this.scale;
 			tab.minWidth = tab.minHeight = 88 * this.scale;
 			tab.minTouchWidth = tab.minTouchHeight = 88 * this.scale;
@@ -1472,7 +1482,7 @@ package feathers.themes
 			this.setScrollerStyles(textArea);
 
 			textArea.textEditorProperties.textFormat = new TextFormat("PF Ronda Seven,Roboto,Helvetica,Arial,_sans", this.fontSize, PRIMARY_TEXT_COLOR);
-			textArea.textEditorProperties.disabledTextFormat = new TextFormat("PF Ronda Seven,Roboto,Helvetica,Arial,_sans", this.fontSize, DISABLED_TEXT_COLOR);
+			//textArea.textEditorProperties.disabledTextFormat = new TextFormat("PF Ronda Seven,Roboto,Helvetica,Arial,_sans", this.fontSize, DISABLED_TEXT_COLOR);
 
 			textArea.paddingTop = 14 * this.scale;
 			textArea.paddingBottom = 8 * this.scale;

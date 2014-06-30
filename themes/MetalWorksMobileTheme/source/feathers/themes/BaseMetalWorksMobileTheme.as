@@ -61,6 +61,7 @@ package feathers.themes
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.text.StageTextTextEditor;
+	import feathers.controls.text.TextBlockTextEditor;
 	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.controls.text.TextFieldTextEditor;
 	import feathers.core.FeathersControl;
@@ -108,9 +109,6 @@ package feathers.themes
 
 		[Embed(source="/../assets/fonts/SourceSansPro-Semibold.ttf",fontFamily="SourceSansPro",fontWeight="bold",mimeType="application/x-font",embedAsCFF="true")]
 		protected static const SOURCE_SANS_PRO_SEMIBOLD:Class;
-
-		[Embed(source="/../assets/fonts/SourceSansPro-Semibold.ttf",fontFamily="SourceSansPro",fontWeight="bold",unicodeRange="U+0030-U+0039",mimeType="application/x-font",embedAsCFF="false")]
-		protected static const SOURCE_SANS_PRO_SEMIBOLD_NUMBERS:Class;
 
 		protected static const FONT_NAME:String = "SourceSansPro";
 
@@ -172,9 +170,13 @@ package feathers.themes
 			return new StageTextTextEditor();
 		}
 
-		protected static function stepperTextEditorFactory():TextFieldTextEditor
+		protected static function stepperTextEditorFactory():TextBlockTextEditor
 		{
-			return new TextFieldTextEditor();
+			//we're only using this text editor in the NumericStepper because
+			//isEditable is false on the TextInput. this text editor is not
+			//suitable for mobile use if the TextInput needs to be editable
+			//because it can't use the soft keyboard or other mobile-friendly UI
+			return new TextBlockTextEditor();
 		}
 
 		protected static function horizontalScrollBarFactory():SimpleScrollBar
@@ -224,7 +226,6 @@ package feathers.themes
 
 		protected var scrollTextTextFormat:TextFormat;
 		protected var scrollTextDisabledTextFormat:TextFormat;
-		protected var lightUICenteredTextFormat:TextFormat;
 
 		protected var headerElementFormat:ElementFormat;
 
@@ -369,7 +370,6 @@ package feathers.themes
 			//these are for components that don't use FTE
 			this.scrollTextTextFormat = new TextFormat("_sans", 24 * this.scale, LIGHT_TEXT_COLOR);
 			this.scrollTextDisabledTextFormat = new TextFormat("_sans", 24 * this.scale, DISABLED_TEXT_COLOR);
-			this.lightUICenteredTextFormat = new TextFormat(FONT_NAME, 24 * this.scale, LIGHT_TEXT_COLOR, true, null, null, null, null, TextFormatAlign.CENTER);
 
 			this.regularFontDescription = new FontDescription(FONT_NAME, FontWeight.NORMAL, FontPosture.NORMAL, FontLookup.EMBEDDED_CFF, RenderingMode.CFF, CFFHinting.NONE);
 			this.boldFontDescription = new FontDescription(FONT_NAME, FontWeight.BOLD, FontPosture.NORMAL, FontLookup.EMBEDDED_CFF, RenderingMode.CFF, CFFHinting.NONE);
@@ -546,6 +546,8 @@ package feathers.themes
 			//numeric stepper
 			this.getStyleProviderForClass(NumericStepper).defaultStyleFunction = this.setNumericStepperStyles;
 			this.getStyleProviderForClass(TextInput).setFunctionForStyleName(NumericStepper.DEFAULT_CHILD_NAME_TEXT_INPUT, this.setNumericStepperTextInputStyles);
+			this.getStyleProviderForClass(Button).setFunctionForStyleName(NumericStepper.DEFAULT_CHILD_NAME_DECREMENT_BUTTON, this.setNumericStepperButtonStyles);
+			this.getStyleProviderForClass(Button).setFunctionForStyleName(NumericStepper.DEFAULT_CHILD_NAME_INCREMENT_BUTTON, this.setNumericStepperButtonStyles);
 
 			//page indicator
 			this.getStyleProviderForClass(PageIndicator).defaultStyleFunction = this.setPageIndicatorStyles;
@@ -1116,8 +1118,7 @@ package feathers.themes
 		{
 			header.minWidth = 88 * this.scale;
 			header.minHeight = 88 * this.scale;
-			header.paddingTop = header.paddingRight = header.paddingBottom =
-				header.paddingLeft = 14 * this.scale;
+			header.padding = 14 * this.scale;
 			header.gap = 8 * this.scale;
 			header.titleGap = 12 * this.scale;
 
@@ -1242,8 +1243,14 @@ package feathers.themes
 			input.paddingLeft = input.paddingRight = 14 * this.scale;
 			input.isEditable = false;
 			input.textEditorFactory = stepperTextEditorFactory;
-			input.textEditorProperties.textFormat = this.lightUICenteredTextFormat;
-			input.textEditorProperties.embedFonts = true;
+			input.textEditorProperties.elementFormat = this.lightUIElementFormat;
+			input.textEditorProperties.textAlign = TextBlockTextEditor.TEXT_ALIGN_CENTER;
+		}
+
+		protected function setNumericStepperButtonStyles(button:Button):void
+		{
+			this.setButtonStyles(button);
+			button.keepDownStateOnRollOut = true;
 		}
 
 	//-------------------------
@@ -1255,8 +1262,7 @@ package feathers.themes
 			pageIndicator.normalSymbolFactory = this.pageIndicatorNormalSymbolFactory;
 			pageIndicator.selectedSymbolFactory = this.pageIndicatorSelectedSymbolFactory;
 			pageIndicator.gap = 10 * this.scale;
-			pageIndicator.paddingTop = pageIndicator.paddingRight = pageIndicator.paddingBottom =
-				pageIndicator.paddingLeft = 6 * this.scale;
+			pageIndicator.padding = 6 * this.scale;
 			pageIndicator.minTouchWidth = pageIndicator.minTouchHeight = 44 * this.scale;
 		}
 
@@ -1325,8 +1331,7 @@ package feathers.themes
 			layout.horizontalAlign = VerticalLayout.HORIZONTAL_ALIGN_JUSTIFY;
 			layout.useVirtualLayout = true;
 			layout.gap = 0;
-			layout.paddingTop = layout.paddingRight = layout.paddingBottom =
-				layout.paddingLeft = 0;
+			layout.padding = 0;
 			list.listProperties.layout = layout;
 			list.listProperties.verticalScrollPolicy = List.SCROLL_POLICY_ON;
 
@@ -1341,8 +1346,7 @@ package feathers.themes
 				backgroundSkin.width = 20 * this.scale;
 				backgroundSkin.height = 20 * this.scale;
 				list.listProperties.backgroundSkin = backgroundSkin;
-				list.listProperties.paddingTop = list.listProperties.paddingRight =
-					list.listProperties.paddingBottom = list.listProperties.paddingLeft = 8 * this.scale;
+				list.listProperties.padding = 8 * this.scale;
 			}
 
 			list.listProperties.itemRendererName = THEME_NAME_PICKER_LIST_ITEM_RENDERER;
@@ -1514,8 +1518,7 @@ package feathers.themes
 			if(!container.layout)
 			{
 				var layout:HorizontalLayout = new HorizontalLayout();
-				layout.paddingTop = layout.paddingRight = layout.paddingBottom =
-					layout.paddingLeft = 14 * this.scale;
+				layout.padding = 14 * this.scale;
 				layout.gap = 8 * this.scale;
 				container.layout = layout;
 			}
@@ -1725,7 +1728,7 @@ package feathers.themes
 			textArea.paddingLeft = textArea.paddingRight = 14 * this.scale;
 
 			textArea.textEditorProperties.textFormat = this.scrollTextTextFormat;
-			textArea.textEditorProperties.disabledTextFormat = this.scrollTextDisabledTextFormat;
+			//textArea.textEditorProperties.disabledTextFormat = this.scrollTextDisabledTextFormat;
 		}
 
 	//-------------------------

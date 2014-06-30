@@ -28,6 +28,7 @@ package feathers.controls
 	import flash.system.ImageDecodingPolicy;
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
+	import flash.utils.setTimeout;
 
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
@@ -38,6 +39,7 @@ package feathers.controls
 	import starling.textures.TextureSmoothing;
 	import starling.utils.RectangleUtil;
 	import starling.utils.ScaleMode;
+	import starling.utils.SystemUtil;
 
 	/**
 	 * Dispatched when the source content finishes loading.
@@ -386,7 +388,8 @@ package feathers.controls
 		private var _textureScale:Number = 1;
 
 		/**
-		 * The scale of the texture. Useful for UI that scales to DPI.
+		 * Scales the texture dimensions during measurement. Useful for UI that
+		 * should scale based on screen density or resolution.
 		 *
 		 * <p>In the following example, the image loader's texture scale is
 		 * customized:</p>
@@ -503,7 +506,7 @@ package feathers.controls
 		 *
 		 * @default flash.display3d.Context3DTextureFormat.BGRA
 		 *
-		 * @see flash.display3d.Context3DTextureFormat
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display3D/Context3DTextureFormat.html flash.display3d.Context3DTextureFormat
 		 */
 		public function get textureFormat():String
 		{
@@ -1034,8 +1037,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1323,6 +1326,18 @@ package feathers.controls
 		 */
 		protected function replaceBitmapDataTexture(bitmapData:BitmapData):void
 		{
+			if(Starling.handleLostContext && !Starling.current.contextValid)
+			{
+				trace("ImageLoader: Context lost while processing loaded image, retrying...");
+				setTimeout(replaceBitmapDataTexture, 1, bitmapData);
+				return;
+			}
+			if(!SystemUtil.isDesktop && !SystemUtil.isApplicationActive)
+			{
+				//avoiding stage3d calls when a mobile application isn't active
+				SystemUtil.executeWhenApplicationIsActive(replaceBitmapDataTexture, bitmapData);
+				return;
+			}
 			this._texture = Texture.fromBitmapData(bitmapData, false, false, 1, this._textureFormat);
 			if(Starling.handleLostContext)
 			{
@@ -1347,6 +1362,18 @@ package feathers.controls
 		 */
 		protected function replaceRawTextureData(rawData:ByteArray):void
 		{
+			if(Starling.handleLostContext && !Starling.current.contextValid)
+			{
+				trace("ImageLoader: Context lost while processing loaded image, retrying...");
+				setTimeout(replaceRawTextureData, 1, rawData);
+				return;
+			}
+			if(!SystemUtil.isDesktop && !SystemUtil.isApplicationActive)
+			{
+				//avoiding stage3d calls when a mobile application isn't active
+				SystemUtil.executeWhenApplicationIsActive(replaceRawTextureData, rawData);
+				return;
+			}
 			this._texture = Texture.fromAtfData(rawData);
 			if(Starling.handleLostContext)
 			{

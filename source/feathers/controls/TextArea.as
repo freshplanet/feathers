@@ -775,6 +775,19 @@ package feathers.controls
 		}
 
 		/**
+		 * Manually removes focus from the text input control.
+		 */
+		public function clearFocus():void
+		{
+			this._isWaitingToSetFocus = false;
+			if(!this.textEditorViewPort || !this._textEditorHasFocus)
+			{
+				return;
+			}
+			this.textEditorViewPort.clearFocus();
+		}
+
+		/**
 		 * Sets the range of selected characters. If both values are the same,
 		 * or the end index is <code>-1</code>, the text insertion position is
 		 * changed and nothing is selected.
@@ -858,8 +871,8 @@ package feathers.controls
 		 */
 		override protected function autoSizeIfNeeded():Boolean
 		{
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -869,7 +882,7 @@ package feathers.controls
 			var newHeight:Number = this.explicitHeight;
 			if(needsWidth)
 			{
-				if(!isNaN(this.originalBackgroundWidth))
+				if(this.originalBackgroundWidth == this.originalBackgroundWidth) //!isNaN
 				{
 					newWidth = this.originalBackgroundWidth;
 				}
@@ -880,7 +893,7 @@ package feathers.controls
 			}
 			if(needsHeight)
 			{
-				if(!isNaN(this.originalBackgroundHeight))
+				if(this.originalBackgroundHeight == this.originalBackgroundHeight) //!isNaN
 				{
 					newHeight = this.originalBackgroundHeight;
 				}
@@ -981,40 +994,37 @@ package feathers.controls
 			{
 				this.currentBackgroundSkin = DisplayObject(this._stateToSkinFunction(this, this._currentState, oldSkin));
 			}
+			else if(!this._isEnabled && this._backgroundDisabledSkin)
+			{
+				this.currentBackgroundSkin = this._backgroundDisabledSkin;
+			}
 			else if(this._hasFocus && this._backgroundFocusedSkin)
 			{
 				this.currentBackgroundSkin = this._backgroundFocusedSkin;
+			}
+			else
+			{
+				this.currentBackgroundSkin = this._backgroundSkin;
 			}
 			if(oldSkin != this.currentBackgroundSkin)
 			{
 				if(oldSkin)
 				{
-					oldSkin.visible = false;
-					if(this._stateToSkinFunction != null)
-					{
-						this.removeChild(oldSkin);
-					}
+					this.removeChild(oldSkin, false);
 				}
-				if(this._stateToSkinFunction != null)
+				if(this.currentBackgroundSkin)
 				{
 					this.addChildAt(this.currentBackgroundSkin, 0);
+					if(this.originalBackgroundWidth != this.originalBackgroundWidth) //isNaN
+					{
+						this.originalBackgroundWidth = this.currentBackgroundSkin.width;
+					}
+					if(this.originalBackgroundHeight != this.originalBackgroundHeight) //isNaN
+					{
+						this.originalBackgroundHeight = this.currentBackgroundSkin.height;
+					}
 				}
-				else
-				{
-					this.setChildIndex(this.currentBackgroundSkin, 0);
-				}
-				this.currentBackgroundSkin.visible = true;
-				if(isNaN(this.originalBackgroundWidth))
-				{
-					this.originalBackgroundWidth = this.currentBackgroundSkin.width;
-				}
-				if(isNaN(this.originalBackgroundHeight))
-				{
-					this.originalBackgroundHeight = this.currentBackgroundSkin.height;
-				}
-				return;
 			}
-			super.refreshBackgroundSkin();
 		}
 
 		/**
@@ -1119,6 +1129,10 @@ package feathers.controls
 		 */
 		protected function textArea_removedFromStageHandler(event:Event):void
 		{
+			if(!this._focusManager && this._textEditorHasFocus)
+			{
+				this.clearFocus();
+			}
 			this._isWaitingToSetFocus = false;
 			this._textEditorHasFocus = false;
 			this._textAreaTouchPointID = -1;

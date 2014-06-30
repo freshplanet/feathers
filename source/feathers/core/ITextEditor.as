@@ -148,7 +148,7 @@ package feathers.core
 	 * @see feathers.controls.TextInput
 	 * @see http://wiki.starling-framework.org/feathers/text-editors
 	 */
-	public interface ITextEditor extends IFeathersControl
+	public interface ITextEditor extends IFeathersControl, ITextBaselineControl
 	{
 		/**
 		 * The text displayed by the editor.

@@ -8,6 +8,7 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls.text
 {
 	import flash.display.BitmapData;
+	import flash.display3D.Context3DProfile;
 	import flash.events.FocusEvent;
 	import flash.events.KeyboardEvent;
 	import flash.events.SoftKeyboardEvent;
@@ -171,7 +172,9 @@ package feathers.controls.text
 	/**
 	 * A Feathers text editor that uses the native <code>flash.text.TextField</code>
 	 * class with its <code>type</code> property set to
-	 * <code>flash.text.TextInputType.INPUT</code>.
+	 * <code>flash.text.TextInputType.INPUT</code>. Textures are completely
+	 * managed by this component, and they will be automatically disposed when
+	 * the component is disposed.
 	 *
 	 * <p>For desktop apps, <code>TextFieldTextEditor</code> is recommended
 	 * instead of <code>StageTextTextEditor</code>. <code>StageTextTextEditor</code>
@@ -200,8 +203,7 @@ package feathers.controls.text
 		public function TextFieldTextEditor()
 		{
 			this.isQuickHitAreaEnabled = true;
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
+			this.addEventListener(Event.REMOVED_FROM_STAGE, textEditor_removedFromStageHandler);
 		}
 
 		/**
@@ -303,6 +305,23 @@ package feathers.controls.text
 			this._text = value;
 			this.invalidate(INVALIDATION_FLAG_DATA);
 			this.dispatchEventWith(Event.CHANGE);
+		}
+
+		/**
+		 * @inheritDoc
+		 */
+		public function get baseline():Number
+		{
+			if(!this.textField)
+			{
+				return 0;
+			}
+			var gutterDimensionsOffset:Number = 0;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 2;
+			}
+			return gutterDimensionsOffset + this.textField.getLineMetrics(0).ascent;
 		}
 
 		/**
@@ -667,6 +686,42 @@ package feathers.controls.text
 		}
 
 		/**
+		 * @private
+		 */
+		protected var _useGutter:Boolean = false;
+
+		/**
+		 * Determines if the 2-pixel gutter around the edges of the
+		 * <code>flash.text.TextField</code> will be used in measurement and
+		 * layout. To visually align with other text renderers and text editors,
+		 * it is often best to leave the gutter disabled.
+		 *
+		 * <p>In the following example, the gutter is enabled:</p>
+		 *
+		 * <listing version="3.0">
+		 * textEditor.useGutter = true;</listing>
+		 *
+		 * @default false
+		 */
+		public function get useGutter():Boolean
+		{
+			return this._useGutter;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set useGutter(value:Boolean):void
+		{
+			if(this._useGutter == value)
+			{
+				return;
+			}
+			this._useGutter = value;
+			this.invalidate(INVALIDATION_FLAG_STYLES);
+		}
+
+		/**
 		 * @inheritDoc
 		 */
 		public function get setTouchFocusOnEndedPhase():Boolean
@@ -704,7 +759,20 @@ package feathers.controls.text
 		 */
 		override public function dispose():void
 		{
-			this.disposeContent();
+			if(this.textSnapshot)
+			{
+				//avoid the need to call dispose(). we'll create a new snapshot
+				//when the renderer is added to stage again.
+				this.textSnapshot.texture.dispose();
+				this.removeChild(this.textSnapshot, true);
+				this.textSnapshot = null;
+			}
+
+			if(this.textField.parent)
+			{
+				this.textField.parent.removeChild(this.textField);
+			}
+
 			super.dispose();
 		}
 
@@ -739,8 +807,13 @@ package feathers.controls.text
 				}
 				if(position)
 				{
-					var positionX:Number = position.x;
-					var positionY:Number = position.y;
+					var gutterPositionOffset:Number = 2;
+					if(this._useGutter)
+					{
+						gutterPositionOffset = 0;
+					}
+					var positionX:Number = position.x + gutterPositionOffset;
+					var positionY:Number = position.y + gutterPositionOffset;
 					if(positionX < 0)
 					{
 						this._pendingSelectionStartIndex = this._pendingSelectionEndIndex = 0;
@@ -770,7 +843,11 @@ package feathers.controls.text
 							}
 							else
 							{
-								this._pendingSelectionStartIndex = this._text.length;
+								this._pendingSelectionStartIndex = this.textField.getCharIndexAtPoint(positionX, this.textField.getLineMetrics(0).ascent / 2);
+								if(this._pendingSelectionStartIndex < 0)
+								{
+									this._pendingSelectionStartIndex = this._text.length;
+								}
 							}
 						}
 						else
@@ -803,6 +880,10 @@ package feathers.controls.text
 					Starling.current.nativeStage.focus = this.textField;
 				}
 				this.textField.requestSoftKeyboard();
+				if(this._textFieldHasFocus)
+				{
+					this.invalidate(INVALIDATION_FLAG_SELECTED);
+				}
 			}
 			else
 			{
@@ -820,7 +901,6 @@ package feathers.controls.text
 				return;
 			}
 			Starling.current.nativeStage.focus = Starling.current.nativeStage;
-			this.dispatchEventWith(FeathersEventType.FOCUS_OUT);
 		}
 
 		/**
@@ -972,18 +1052,45 @@ package feathers.controls.text
 			}
 
 			this.commitStylesAndData(this.measureTextField);
+
+			var gutterDimensionsOffset:Number = 4;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 0;
+			}
+
 			var newWidth:Number = this.explicitWidth;
 			if(needsWidth)
 			{
-				this.measureTextField.width = newWidth;
-				newWidth = Math.max(this._minWidth, Math.min(this._maxWidth, this.measureTextField.textWidth + 4));
+				this.measureTextField.width = newWidth + gutterDimensionsOffset;
+				newWidth = this.measureTextField.textWidth;
+				if(newWidth < this._minWidth)
+				{
+					newWidth = this._minWidth;
+				}
+				else if(newWidth > this._maxWidth)
+				{
+					newWidth = this._maxWidth;
+				}
 			}
 
 			var newHeight:Number = this.explicitHeight;
 			if(needsHeight)
 			{
-				this.measureTextField.width = newWidth;
-				newHeight = Math.max(this._minHeight, Math.min(this._maxHeight, this.textField.textHeight + 4));
+				this.measureTextField.width = newWidth + gutterDimensionsOffset;
+				newHeight = this.measureTextField.textHeight;
+				if(this._useGutter)
+				{
+					newHeight += 4;
+				}
+				if(newHeight < this._minHeight)
+				{
+					newHeight = this._minHeight;
+				}
+				else if(newHeight > this._maxHeight)
+				{
+					newHeight = this._maxHeight;
+				}
 			}
 
 			result.x = newWidth;
@@ -1006,13 +1113,15 @@ package feathers.controls.text
 			textField.embedFonts = this._embedFonts;
 			textField.type = this._isEditable ? TextFieldType.INPUT : TextFieldType.DYNAMIC;
 			textField.selectable = this._isEnabled;
+			var isFormatDifferent:Boolean = false;
 			if(this._textFormat)
 			{
+				isFormatDifferent = textField.defaultTextFormat != this._textFormat;
 				textField.defaultTextFormat = this._textFormat;
 			}
 			if(this._isHTML)
 			{
-				if(textField.htmlText != this._text)
+				if(isFormatDifferent || textField.htmlText != this._text)
 				{
 					if(textField == this.textField && this._pendingSelectionStartIndex < 0)
 					{
@@ -1024,7 +1133,7 @@ package feathers.controls.text
 			}
 			else
 			{
-				if(textField.text != this._text)
+				if(isFormatDifferent || textField.text != this._text)
 				{
 					if(textField == this.textField && this._pendingSelectionStartIndex < 0)
 					{
@@ -1058,7 +1167,7 @@ package feathers.controls.text
 			{
 				//we need to wait a frame for the flash.text.TextField to render
 				//properly. sometimes two, and this is a known issue.
-				this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+				this.addEventListener(Event.ENTER_FRAME, textEditor_enterFrameHandler);
 			}
 			this.doPendingActions();
 		}
@@ -1068,8 +1177,13 @@ package feathers.controls.text
 		 */
 		protected function refreshTextFieldSize():void
 		{
-			this.textField.width = this.actualWidth;
-			this.textField.height = this.actualHeight;
+			var gutterDimensionsOffset:Number = 4;
+			if(this._useGutter)
+			{
+				gutterDimensionsOffset = 0;
+			}
+			this.textField.width = this.actualWidth + gutterDimensionsOffset;
+			this.textField.height = this.actualHeight + gutterDimensionsOffset;
 		}
 
 		/**
@@ -1083,8 +1197,18 @@ package feathers.controls.text
 			this._textFieldClipRect.y = 0;
 
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
-			this._textFieldClipRect.width = this.actualWidth * Starling.contentScaleFactor * matrixToScaleX(HELPER_MATRIX);
-			this._textFieldClipRect.height = this.actualHeight * Starling.contentScaleFactor * matrixToScaleY(HELPER_MATRIX);
+			var clipWidth:Number = this.actualWidth * Starling.contentScaleFactor * matrixToScaleX(HELPER_MATRIX);
+			if(clipWidth < 0)
+			{
+				clipWidth = 0;
+			}
+			var clipHeight:Number = this.actualHeight * Starling.contentScaleFactor * matrixToScaleY(HELPER_MATRIX);
+			if(clipHeight < 0)
+			{
+				clipHeight = 0;
+			}
+			this._textFieldClipRect.width = clipWidth;
+			this._textFieldClipRect.height = clipHeight;
 		}
 
 		/**
@@ -1106,8 +1230,13 @@ package feathers.controls.text
 				nativeScaleFactor = Starling.current.nativeStage.contentsScaleFactor;
 			}
 			var scaleFactor:Number = Starling.contentScaleFactor / nativeScaleFactor;
-			this.textField.x = Math.round(starlingViewPort.x + (HELPER_POINT.x * scaleFactor));
-			this.textField.y = Math.round(starlingViewPort.y + (HELPER_POINT.y * scaleFactor));
+			var gutterPositionOffset:Number = 2;
+			if(this._useGutter)
+			{
+				gutterPositionOffset = 0;
+			}
+			this.textField.x = Math.round(starlingViewPort.x + (HELPER_POINT.x * scaleFactor) - gutterPositionOffset);
+			this.textField.y = Math.round(starlingViewPort.y + (HELPER_POINT.y * scaleFactor) - gutterPositionOffset);
 			this.textField.rotation = matrixToRotation(HELPER_MATRIX) * 180 / Math.PI;
 			this.textField.scaleX = matrixToScaleX(HELPER_MATRIX) * scaleFactor;
 			this.textField.scaleY = matrixToScaleY(HELPER_MATRIX) * scaleFactor;
@@ -1132,8 +1261,17 @@ package feathers.controls.text
 		 */
 		protected function checkIfNewSnapshotIsNeeded():void
 		{
-			this._snapshotWidth = getNextPowerOfTwo(this._textFieldClipRect.width);
-			this._snapshotHeight = getNextPowerOfTwo(this._textFieldClipRect.height);
+			var canUseRectangleTexture:Boolean = Starling.current.profile != Context3DProfile.BASELINE_CONSTRAINED;
+			if(canUseRectangleTexture)
+			{
+				this._snapshotWidth = this._textFieldClipRect.width;
+				this._snapshotHeight = this._textFieldClipRect.height;
+			}
+			else
+			{
+				this._snapshotWidth = getNextPowerOfTwo(this._textFieldClipRect.width);
+				this._snapshotHeight = getNextPowerOfTwo(this._textFieldClipRect.height);
+			}
 			var textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
 			this._needsNewTexture = this._needsNewTexture || !this.textSnapshot || this._snapshotWidth != textureRoot.width || this._snapshotHeight != textureRoot.height;
 		}
@@ -1172,16 +1310,21 @@ package feathers.controls.text
 		 */
 		protected function refreshSnapshot():void
 		{
-			if(this.textField.width == 0 || this.textField.height == 0)
+			if(this._snapshotWidth <= 0 || this._snapshotHeight <= 0)
 			{
 				return;
+			}
+			var gutterPositionOffset:Number = 2;
+			if(this._useGutter)
+			{
+				gutterPositionOffset = 0;
 			}
 			this.getTransformationMatrix(this.stage, HELPER_MATRIX);
 			var globalScaleX:Number = matrixToScaleX(HELPER_MATRIX);
 			var globalScaleY:Number = matrixToScaleY(HELPER_MATRIX);
 			var scaleFactor:Number = Starling.contentScaleFactor;
 			HELPER_MATRIX.identity();
-			HELPER_MATRIX.translate(this._textFieldOffsetX, this._textFieldOffsetY);
+			HELPER_MATRIX.translate(this._textFieldOffsetX - gutterPositionOffset, this._textFieldOffsetY - gutterPositionOffset);
 			HELPER_MATRIX.scale(scaleFactor * globalScaleX, scaleFactor * globalScaleY);
 			var bitmapData:BitmapData = new BitmapData(this._snapshotWidth, this._snapshotHeight, true, 0x00ff00ff);
 			bitmapData.draw(this.textField, HELPER_MATRIX, null, null, this._textFieldClipRect);
@@ -1221,46 +1364,22 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
-		protected function disposeContent():void
+		protected function textEditor_removedFromStageHandler(event:Event):void
 		{
-			if(this.textSnapshot)
-			{
-				//avoid the need to call dispose(). we'll create a new snapshot
-				//when the renderer is added to stage again.
-				this.textSnapshot.texture.dispose();
-				this.removeChild(this.textSnapshot, true);
-				this.textSnapshot = null;
-			}
-
 			if(this.textField.parent)
 			{
-				Starling.current.nativeStage.removeChild(this.textField);
+				//remove this from the stage, if needed
+				//it will be added back next time we receive focus
+				this.textField.parent.removeChild(this.textField);
 			}
 		}
 
 		/**
 		 * @private
 		 */
-		protected function addedToStageHandler(event:Event):void
+		protected function textEditor_enterFrameHandler(event:Event):void
 		{
-			//we need to invalidate in order to get a fresh snapshot
-			this.invalidate(INVALIDATION_FLAG_DATA);
-		}
-
-		/**
-		 * @private
-		 */
-		protected function removedFromStageHandler(event:Event):void
-		{
-			this.disposeContent();
-		}
-
-		/**
-		 * @private
-		 */
-		protected function enterFrameHandler(event:Event):void
-		{
-			this.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
+			this.removeEventListener(Event.ENTER_FRAME, textEditor_enterFrameHandler);
 			this.refreshSnapshot();
 			if(this.textSnapshot)
 			{

@@ -452,8 +452,8 @@ package feathers.controls
 		/**
 		 * The value added to the <code>nameList</code> of the vertical scroll
 		 * bar. This variable is <code>protected</code> so that sub-classes can
-		 * customize the horizontal scroll bar name in their constructors
-		 * instead of using the default name defined by <code>DEFAULT_CHILD_NAME_HORIZONTAL_SCROLL_BAR</code>.
+		 * customize the vertical scroll bar name in their constructors
+		 * instead of using the default name defined by <code>DEFAULT_CHILD_NAME_VERTICAL_SCROLL_BAR</code>.
 		 *
 		 * <p>To customize the vertical scroll bar name without subclassing, see
 		 * <code>customVerticalScrollBarName</code>.</p>
@@ -1513,7 +1513,7 @@ package feathers.controls
 		 * <p>In the following example, vertical scrolling is disabled:</p>
 		 *
 		 * <listing version="3.0">
-		 * scroller.horizontalScrollPolicy = Scroller.SCROLL_POLICY_OFF;</listing>
+		 * scroller.verticalScrollPolicy = Scroller.SCROLL_POLICY_OFF;</listing>
 		 *
 		 * @default Scroller.SCROLL_POLICY_AUTO
 		 *
@@ -3908,6 +3908,7 @@ package feathers.controls
 		 */
 		protected function throwTo(targetHorizontalScrollPosition:Number = NaN, targetVerticalScrollPosition:Number = NaN, duration:Number = 0.5):void
 		{
+			var changedPosition:Boolean = false;
 			if(targetHorizontalScrollPosition == targetHorizontalScrollPosition) //!isNaN
 			{
 				if(this._horizontalAutoScrollTween)
@@ -3917,6 +3918,7 @@ package feathers.controls
 				}
 				if(this._horizontalScrollPosition != targetHorizontalScrollPosition)
 				{
+					changedPosition = true;
 					this.revealHorizontalScrollBar();
 					this.startScroll();
 					if(duration == 0)
@@ -3947,6 +3949,7 @@ package feathers.controls
 				}
 				if(this._verticalScrollPosition != targetVerticalScrollPosition)
 				{
+					changedPosition = true;
 					this.revealVerticalScrollBar();
 					this.startScroll();
 					if(duration == 0)
@@ -3968,7 +3971,7 @@ package feathers.controls
 				}
 			}
 
-			if(duration == 0)
+			if(changedPosition && duration == 0)
 			{
 				this.completeScroll();
 			}
@@ -4897,8 +4900,8 @@ package feathers.controls
 			}
 			var starlingViewPort:Rectangle = Starling.current.viewPort;
 			var scaleFactor:Number = nativeScaleFactor / Starling.contentScaleFactor;
-			HELPER_POINT.x = (event.stageX - starlingViewPort.x) / scaleFactor;
-			HELPER_POINT.y = (event.stageY - starlingViewPort.y) / scaleFactor;
+			HELPER_POINT.x = (event.stageX - starlingViewPort.x) * scaleFactor;
+			HELPER_POINT.y = (event.stageY - starlingViewPort.y) * scaleFactor;
 			if(this.contains(this.stage.hitTest(HELPER_POINT, true)))
 			{
 				this.globalToLocal(HELPER_POINT, HELPER_POINT);
@@ -4910,7 +4913,6 @@ package feathers.controls
 				{
 					return;
 				}
-				this.revealVerticalScrollBar();
 				var scrollStep:Number = this._verticalMouseWheelScrollStep;
 				if(scrollStep != scrollStep) //isNaN
 				{

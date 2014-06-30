@@ -249,7 +249,7 @@ package feathers.controls
 		 * @see feathers.core.IFeathersControl#nameList
 		 */
 		public static const ALTERNATE_CHILD_NAME_INSET_ITEM_RENDERER:String = "feathers-grouped-list-inset-item-renderer";
-
+		
 		/**
 		 * An alternate name to use for item renderers to give them an inset
 		 * style. Typically meant to be used for the renderer of the first item

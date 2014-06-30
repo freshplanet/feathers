@@ -338,7 +338,7 @@ package feathers.themes
 
 		protected function initializeGlobals():void
 		{
-			FocusManager.isEnabled = true;
+			FocusManager.setEnabledForStage(Starling.current.stage, true);
 
 			FeathersControl.defaultTextRendererFactory = textRendererFactory;
 			FeathersControl.defaultTextEditorFactory = textEditorFactory;
@@ -649,10 +649,7 @@ package feathers.themes
 			group.horizontalAlign = ButtonGroup.HORIZONTAL_ALIGN_CENTER;
 			group.verticalAlign = ButtonGroup.VERTICAL_ALIGN_JUSTIFY;
 			group.gap = 4;
-			group.paddingTop = 12;
-			group.paddingRight = 12;
-			group.paddingBottom = 12;
-			group.paddingLeft = 12;
+			group.padding = 12;
 		}
 
 		protected function setAlertMessageTextRendererStyles(renderer:TextFieldTextRenderer):void
@@ -796,8 +793,7 @@ package feathers.themes
 			list.focusIndicatorSkin = new Scale9Image(this.focusIndicatorSkinTextures);
 			list.focusPadding = -1;
 
-			list.paddingTop = list.paddingRight = list.paddingBottom =
-				list.paddingLeft = 1;
+			list.padding = 1;
 		}
 
 		//see List section for item renderer styles
@@ -899,8 +895,7 @@ package feathers.themes
 			list.focusIndicatorSkin = new Scale9Image(this.focusIndicatorSkinTextures);
 			list.focusPadding = -1;
 
-			list.paddingTop = list.paddingRight = list.paddingBottom =
-				list.paddingLeft = 1;
+			list.padding = 1;
 		}
 
 		protected function setItemRendererStyles(renderer:BaseDefaultItemRenderer):void
@@ -959,6 +954,7 @@ package feathers.themes
 			skinSelector.setValueForState(this.stepperIncrementButtonDownSkinTextures, Button.STATE_DOWN, false);
 			skinSelector.setValueForState(this.stepperIncrementButtonDisabledSkinTextures, Button.STATE_DISABLED, false);
 			button.stateToSkinFunction = skinSelector.updateValue;
+			button.keepDownStateOnRollOut = true;
 		}
 
 		protected function setNumericStepperDecrementButtonStyles(button:Button):void
@@ -969,6 +965,7 @@ package feathers.themes
 			skinSelector.setValueForState(this.stepperDecrementButtonDownSkinTextures, Button.STATE_DOWN, false);
 			skinSelector.setValueForState(this.stepperDecrementButtonDisabledSkinTextures, Button.STATE_DISABLED, false);
 			button.stateToSkinFunction = skinSelector.updateValue;
+			button.keepDownStateOnRollOut = true;
 		}
 
 		protected function setNumericStepperTextInputStyles(input:TextInput):void
@@ -977,7 +974,11 @@ package feathers.themes
 			input.gap = 2;
 			input.paddingTop = input.paddingBottom = 2;
 			input.paddingRight = input.paddingLeft = 4;
+
 			input.textEditorProperties.textFormat = this.defaultTextFormat;
+			//input.textEditorProperties.disabledTextFormat = this.defaultTextFormat;
+			input.promptProperties.textFormat = this.defaultTextFormat;
+			input.promptProperties.disabledTextFormat = this.defaultTextFormat;
 
 			var backgroundSkin:Scale9Image = new Scale9Image(textInputBackgroundSkinTextures);
 			backgroundSkin.width = backgroundSkin.height;
@@ -998,8 +999,7 @@ package feathers.themes
 			pageIndicator.normalSymbolFactory = this.pageIndicatorNormalSymbolFactory;
 			pageIndicator.selectedSymbolFactory = this.pageIndicatorSelectedSymbolFactory;
 			pageIndicator.gap = 12;
-			pageIndicator.paddingTop = pageIndicator.paddingRight = pageIndicator.paddingBottom =
-				pageIndicator.paddingLeft = 12;
+			pageIndicator.padding = 12;
 			pageIndicator.minTouchWidth = pageIndicator.minTouchHeight = 12;
 		}
 
@@ -1104,8 +1104,7 @@ package feathers.themes
 			}
 			progress.fillSkin = fillSkin;
 
-			progress.paddingTop = progress.paddingRight = progress.paddingBottom =
-				progress.paddingLeft = 1;
+			progress.padding = 1;
 		}
 
 	//-------------------------
@@ -1320,7 +1319,7 @@ package feathers.themes
 
 			text.textFormat = this.defaultTextFormat;
 			text.disabledTextFormat = this.disabledTextFormat;
-			text.paddingTop = text.paddingRight = text.paddingBottom = text.paddingLeft = 8;
+			text.padding = 8;
 		}
 
 	//-------------------------
@@ -1462,6 +1461,7 @@ package feathers.themes
 			this.setScrollerStyles(textArea);
 
 			textArea.textEditorProperties.textFormat = this.defaultTextFormat;
+			//textArea.textEditorProperties.disabledTextFormat = this.disabledTextFormat;
 
 			textArea.paddingTop = 2;
 			textArea.paddingBottom = 2;
@@ -1502,7 +1502,9 @@ package feathers.themes
 			input.paddingRight = input.paddingLeft = 4;
 
 			input.textEditorProperties.textFormat = this.defaultTextFormat;
+			//input.textEditorProperties.disabledTextFormat = this.disabledTextFormat;
 			input.promptProperties.textFormat = this.defaultTextFormat;
+			input.promptProperties.disabledTextFormat = this.disabledTextFormat;
 		}
 
 		protected function setTextInputStyles(input:TextInput):void

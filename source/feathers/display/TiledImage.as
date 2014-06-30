@@ -15,6 +15,8 @@ package feathers.display
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
+	import starling.core.RenderSupport;
+
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
@@ -315,7 +317,8 @@ package feathers.display
 		private var _textureScale:Number = 1;
 
 		/**
-		 * The amount to scale the texture. Useful for DPI changes.
+		 * Scales the texture dimensions during measurement. Useful for UI that
+		 * should scale based on screen density or resolution.
 		 *
 		 * <p>In the following example, the texture scale is changed:</p>
 		 *
@@ -452,6 +455,18 @@ package feathers.display
 		/**
 		 * @private
 		 */
+		override public function render(support:RenderSupport, parentAlpha:Number):void
+		{
+			if(this._isInvalid)
+			{
+				this.validate();
+			}
+			super.render(support, parentAlpha);
+		}
+
+		/**
+		 * @private
+		 */
 		override public function flatten():void
 		{
 			this.validate();
@@ -463,15 +478,18 @@ package feathers.display
 		 */
 		public function validate():void
 		{
-			if(!this._validationQueue || !this.stage || !this._isInvalid)
+			if(!this._isInvalid)
 			{
 				return;
 			}
 			if(this._isValidating)
 			{
-				//we were already validating, and something else told us to
-				//validate. that's bad.
-				this._validationQueue.addControl(this, true);
+				if(this._validationQueue)
+				{
+					//we were already validating, and something else told us to
+					//validate. that's bad.
+					this._validationQueue.addControl(this, true);
+				}
 				return;
 			}
 			this._isValidating = true;

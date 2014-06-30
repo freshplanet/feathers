@@ -317,6 +317,8 @@ package feathers.controls.supportClasses
 			}
 		}
 
+		private var _updateForDataReset:Boolean = false;
+
 		private var _dataProvider:HierarchicalCollection;
 
 		public function get dataProvider():HierarchicalCollection
@@ -353,6 +355,7 @@ package feathers.controls.supportClasses
 			{
 				IVariableVirtualLayout(this._layout).resetVariableVirtualCache();
 			}
+			this._updateForDataReset = true;
 			this.invalidate(INVALIDATION_FLAG_DATA);
 		}
 
@@ -1585,6 +1588,7 @@ package feathers.controls.supportClasses
 			this.recoverInactiveRenderers();
 			this.renderUnrenderedData();
 			this.freeInactiveRenderers();
+			this._updateForDataReset = false;
 		}
 
 		private function findUnrenderedData():void
@@ -1684,6 +1688,12 @@ package feathers.controls.supportClasses
 						{
 							headerOrFooterRenderer.layoutIndex = currentIndex;
 							headerOrFooterRenderer.groupIndex = i;
+							if(this._updateForDataReset)
+							{
+								//see comments in findRendererForItem()
+								headerOrFooterRenderer.data = null;
+								headerOrFooterRenderer.data = item;
+							}
 							this._activeHeaderRenderers.push(headerOrFooterRenderer);
 							this._inactiveHeaderRenderers.splice(this._inactiveHeaderRenderers.indexOf(headerOrFooterRenderer), 1);
 							headerOrFooterRenderer.visible = true;
@@ -1747,6 +1757,12 @@ package feathers.controls.supportClasses
 						{
 							headerOrFooterRenderer.groupIndex = i;
 							headerOrFooterRenderer.layoutIndex = currentIndex;
+							if(this._updateForDataReset)
+							{
+								//see comments in findRendererForItem()
+								headerOrFooterRenderer.data = null;
+								headerOrFooterRenderer.data = item;
+							}
 							this._activeFooterRenderers.push(headerOrFooterRenderer);
 							this._inactiveFooterRenderers.splice(this._inactiveFooterRenderers.indexOf(headerOrFooterRenderer), 1);
 							headerOrFooterRenderer.visible = true;
@@ -1803,6 +1819,20 @@ package feathers.controls.supportClasses
 				itemRenderer.groupIndex = groupIndex;
 				itemRenderer.itemIndex = itemIndex;
 				itemRenderer.layoutIndex = layoutIndex;
+				if(this._updateForDataReset)
+				{
+					//similar to calling updateItemAt(), replacing the data
+					//provider or resetting its source means that we should
+					//trick the item renderer into thinking it has new data.
+					//many developers seem to expect this behavior, so while
+					//it's not the most optimal for performance, it saves on
+					//support time in the forums. thankfully, it's still
+					//somewhat optimized since the same item renderer will
+					//receive the same data, and the children generally
+					//won't have changed much, if at all.
+					itemRenderer.data = null;
+					itemRenderer.data = item;
+				}
 
 				//the typical item renderer is a special case, and we will
 				//have already put it into the active renderers, so we don't
@@ -2540,6 +2570,8 @@ package feathers.controls.supportClasses
 
 		private function dataProvider_resetHandler(event:Event):void
 		{
+			this._updateForDataReset = true;
+
 			var layout:IVariableVirtualLayout = this._layout as IVariableVirtualLayout;
 			if(!layout || !layout.hasVariableItemDimensions)
 			{

@@ -14,6 +14,8 @@ package feathers.controls.text
 	import flash.display.BitmapData;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
+	import flash.display3D.Context3DProfile;
+	import flash.filters.BitmapFilter;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -43,7 +45,7 @@ package feathers.controls.text
 	 * Flash Text Engine (FTE), and draws it to <code>BitmapData</code> to
 	 * convert to Starling textures. Textures are completely managed by this
 	 * component, and they will be automatically disposed when the component is
-	 * removed from the stage.
+	 * disposed.
 	 *
 	 * <p>For longer passages of text, this component will stitch together
 	 * multiple individual textures both horizontally and vertically, as a grid,
@@ -52,7 +54,7 @@ package feathers.controls.text
 	 * caution when displaying a lot of text.</p>
 	 *
 	 * @see http://wiki.starling-framework.org/feathers/text-renderers
-	 * @see flash.text.engine.TextBlock
+	 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html flash.text.engine.TextBlock
 	 */
 	public class TextBlockTextRenderer extends FeathersControl implements ITextRenderer
 	{
@@ -134,8 +136,6 @@ package feathers.controls.text
 		{
 			super();
 			this.isQuickHitAreaEnabled = true;
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
 		}
 
 		/**
@@ -155,6 +155,16 @@ package feathers.controls.text
 		 * snapshots appearing after the first are stored here.
 		 */
 		protected var textSnapshots:Vector.<Image>;
+
+		/**
+		 * @private
+		 */
+		protected var _textSnapshotOffsetX:Number = 0;
+
+		/**
+		 * @private
+		 */
+		protected var _textSnapshotOffsetY:Number = 0;
 
 		/**
 		 * @private
@@ -328,7 +338,7 @@ package feathers.controls.text
 		 * @default null
 		 *
 		 * @see #disabledElementFormat
-		 * @see flash.text.engine.ElementFormat
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/ElementFormat.html flash.text.engine.ElementFormat
 		 */
 		public function get elementFormat():ElementFormat
 		{
@@ -367,7 +377,7 @@ package feathers.controls.text
 		 * @default null
 		 *
 		 * @see #elementFormat
-		 * @see flash.text.engine.ElementFormat
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/ElementFormat.html flash.text.engine.ElementFormat
 		 */
 		public function get disabledElementFormat():ElementFormat
 		{
@@ -521,7 +531,7 @@ package feathers.controls.text
 		 *
 		 * @default true
 		 *
-		 * @see flash.text.engine.TextBlock#applyNonLinearFontScaling
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#applyNonLinearFontScaling Full description of flash.text.engine.TextBlock.applyNonLinearFontScaling in Adobe's Flash Platform API Reference
 		 */
 		public function get applyNonLinearFontScaling():Boolean
 		{
@@ -556,7 +566,7 @@ package feathers.controls.text
 		 *
 		 * @default null
 		 *
-		 * @see flash.text.engine.TextBlock#baselineFontDescription
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#baselineFontDescription Full description of flash.text.engine.TextBlock.baselineFontDescription in Adobe's Flash Platform API Reference
 		 * @see #baselineFontSize
 		 */
 		public function get baselineFontDescription():FontDescription
@@ -593,7 +603,7 @@ package feathers.controls.text
 		 *
 		 * @default 12
 		 *
-		 * @see flash.text.engine.TextBlock#baselineFontSize
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#baselineFontSize Full description of flash.text.engine.TextBlock.baselineFontSize in Adobe's Flash Platform API Reference
 		 * @see #baselineFontDescription
 		 */
 		public function get baselineFontSize():Number
@@ -629,8 +639,8 @@ package feathers.controls.text
 		 *
 		 * @default TextBaseline.ROMAN
 		 *
-		 * @see flash.text.engine.TextBlock#baselineZero
-		 * @see flash.text.engine.TextBaseline
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#baselineZero Full description of flash.text.engine.TextBlock.baselineZero in Adobe's Flash Platform API Reference
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBaseline.html flash.text.engine.TextBaseline
 		 */
 		public function get baselineZero():String
 		{
@@ -666,7 +676,7 @@ package feathers.controls.text
 		 *
 		 * @default 0
 		 *
-		 * @see flash.text.engine.TextBlock#bidiLevel
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#bidiLevel Full description of flash.text.engine.TextBlock.bidiLevel in Adobe's Flash Platform API Reference
 		 */
 		public function get bidiLevel():int
 		{
@@ -701,8 +711,8 @@ package feathers.controls.text
 		 *
 		 * @default TextRotation.ROTATE_0
 		 *
-		 * @see flash.text.engine.TextBlock#lineRotation
-		 * @see flash.text.engine.TextRotation
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#lineRotation Full description of flash.text.engine.TextBlock.lineRotation in Adobe's Flash Platform API Reference
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextRotation.html flash.text.engine.TextRotation
 		 */
 		public function get lineRotation():String
 		{
@@ -738,7 +748,7 @@ package feathers.controls.text
 		 *
 		 * @default null
 		 *
-		 * @see flash.text.engine.TextBlock#tabStops
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#tabStops Full description of flash.text.engine.TextBlock.tabStops in Adobe's Flash Platform API Reference
 		 */
 		public function get tabStops():Vector.<TabStop>
 		{
@@ -769,9 +779,9 @@ package feathers.controls.text
 		 * <p>In the following example, the text justifier is changed:</p>
 		 *
 		 * <listing version="3.0">
-		 * textRenderer.textAlign = new SpaceJustifier( "en", LineJustification.ALL_BUT_LAST );</listing>
+		 * textRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_LAST );</listing>
 		 *
-		 * @see flash.text.engine.TextBlock#textJustifier
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#textJustifier Full description of flash.text.engine.TextBlock.textJustifier in Adobe's Flash Platform API Reference
 		 */
 		public function get textJustifier():TextJustifier
 		{
@@ -805,7 +815,7 @@ package feathers.controls.text
 		 * <listing version="3.0">
 		 * textRenderer.userData = { author: "William Shakespeare", title: "Much Ado About Nothing" };</listing>
 		 *
-		 * @see flash.text.engine.TextBlock#userData
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/engine/TextBlock.html#userData Full description of flash.text.engine.TextBlock.userData in Adobe's Flash Platform API Reference
 		 */
 		public function get userData():*
 		{
@@ -885,7 +895,11 @@ package feathers.controls.text
 		 */
 		public function set maxTextureDimensions(value:int):void
 		{
-			value = getNextPowerOfTwo(value);
+			//check if we can use rectangle textures or not
+			if(Starling.current.profile == Context3DProfile.BASELINE_CONSTRAINED)
+			{
+				value = getNextPowerOfTwo(value);
+			}
 			if(this._maxTextureDimensions == value)
 			{
 				return;
@@ -910,6 +924,8 @@ package feathers.controls.text
 		 * renderer.nativeFilters = [ new GlowFilter() ];</listing>
 		 *
 		 * @default null
+		 *
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/DisplayObject.html#filters Full description of flash.display.DisplayObject.filters in Adobe's Flash Platform API Reference
 		 */
 		public function get nativeFilters():Array
 		{
@@ -1014,7 +1030,31 @@ package feathers.controls.text
 		 */
 		override public function dispose():void
 		{
-			this.disposeContent();
+			if(this.textSnapshot)
+			{
+				this.textSnapshot.texture.dispose();
+				this.removeChild(this.textSnapshot, true);
+				this.textSnapshot = null;
+			}
+			if(this.textSnapshots)
+			{
+				var snapshotCount:int = this.textSnapshots.length;
+				for(var i:int = 0; i < snapshotCount; i++)
+				{
+					var snapshot:Image = this.textSnapshots[i];
+					snapshot.texture.dispose();
+					this.removeChild(snapshot, true);
+				}
+				this.textSnapshots = null;
+			}
+
+			this._previousContentWidth = NaN;
+			this._previousContentHeight = NaN;
+
+			this._needsNewTexture = false;
+			this._snapshotWidth = 0;
+			this._snapshotHeight = 0;
+
 			super.dispose();
 		}
 
@@ -1028,12 +1068,13 @@ package feathers.controls.text
 				if(this._snapToPixels)
 				{
 					this.getTransformationMatrix(this.stage, HELPER_MATRIX);
-					this.textSnapshot.x = Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx;
-					this.textSnapshot.y = Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
+					this.textSnapshot.x = this._textSnapshotOffsetX + Math.round(HELPER_MATRIX.tx) - HELPER_MATRIX.tx;
+					this.textSnapshot.y = this._textSnapshotOffsetY + Math.round(HELPER_MATRIX.ty) - HELPER_MATRIX.ty;
 				}
 				else
 				{
-					this.textSnapshot.x = this.textSnapshot.y = 0;
+					this.textSnapshot.x = this._textSnapshotOffsetX;
+					this.textSnapshot.y = this._textSnapshotOffsetY;
 				}
 			}
 			super.render(support, parentAlpha);
@@ -1203,23 +1244,52 @@ package feathers.controls.text
 
 			if(sizeInvalid)
 			{
+				var canUseRectangleTexture:Boolean = Starling.current.profile != Context3DProfile.BASELINE_CONSTRAINED;
 				var rectangleSnapshotWidth:Number = this.actualWidth * Starling.contentScaleFactor;
-				if(rectangleSnapshotWidth > this._maxTextureDimensions)
+				if(canUseRectangleTexture)
 				{
-					this._snapshotWidth = int(rectangleSnapshotWidth / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotWidth % this._maxTextureDimensions);
+					if(rectangleSnapshotWidth > this._maxTextureDimensions)
+					{
+						this._snapshotWidth = int(rectangleSnapshotWidth / this._maxTextureDimensions) * this._maxTextureDimensions + (rectangleSnapshotWidth % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotWidth = rectangleSnapshotWidth;
+					}
 				}
 				else
 				{
-					this._snapshotWidth = getNextPowerOfTwo(rectangleSnapshotWidth);
+					if(rectangleSnapshotWidth > this._maxTextureDimensions)
+					{
+						this._snapshotWidth = int(rectangleSnapshotWidth / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotWidth % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotWidth = getNextPowerOfTwo(rectangleSnapshotWidth);
+					}
 				}
 				var rectangleSnapshotHeight:Number = this.actualHeight * Starling.contentScaleFactor;
-				if(rectangleSnapshotHeight > this._maxTextureDimensions)
+				if(canUseRectangleTexture)
 				{
-					this._snapshotHeight = int(rectangleSnapshotHeight / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotHeight % this._maxTextureDimensions);
+					if(rectangleSnapshotHeight > this._maxTextureDimensions)
+					{
+						this._snapshotHeight = int(rectangleSnapshotHeight / this._maxTextureDimensions) * this._maxTextureDimensions + (rectangleSnapshotHeight % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotHeight = rectangleSnapshotHeight;
+					}
 				}
 				else
 				{
-					this._snapshotHeight = getNextPowerOfTwo(rectangleSnapshotHeight);
+					if(rectangleSnapshotHeight > this._maxTextureDimensions)
+					{
+						this._snapshotHeight = int(rectangleSnapshotHeight / this._maxTextureDimensions) * this._maxTextureDimensions + getNextPowerOfTwo(rectangleSnapshotHeight % this._maxTextureDimensions);
+					}
+					else
+					{
+						this._snapshotHeight = getNextPowerOfTwo(rectangleSnapshotHeight);
+					}
 				}
 				var textureRoot:ConcreteTexture = this.textSnapshot ? this.textSnapshot.texture.root : null;
 				this._needsNewTexture = this._needsNewTexture || !this.textSnapshot || this._snapshotWidth != textureRoot.width || this._snapshotHeight != textureRoot.height;
@@ -1278,6 +1348,49 @@ package feathers.controls.text
 		/**
 		 * @private
 		 */
+		protected function measureNativeFilters(bitmapData:BitmapData, result:Rectangle = null):Rectangle
+		{
+			if(!result)
+			{
+				result = new Rectangle();
+			}
+			var resultX:Number = 0;
+			var resultY:Number = 0;
+			var resultWidth:Number = 0;
+			var resultHeight:Number = 0;
+			var filterCount:int = this._nativeFilters.length;
+			for(var i:int = 0; i < filterCount; i++)
+			{
+				var filter:BitmapFilter = this._nativeFilters[i];
+				var filterRect:Rectangle = bitmapData.generateFilterRect(bitmapData.rect, filter);
+				var filterX:Number = filterRect.x;
+				var filterY:Number = filterRect.y;
+				var filterWidth:Number = filterRect.width;
+				var filterHeight:Number = filterRect.height;
+				if(resultX > filterX)
+				{
+					resultX = filterX;
+				}
+				if(resultY > filterY)
+				{
+					resultY = filterY;
+				}
+				if(resultWidth < filterWidth)
+				{
+					resultWidth = filterWidth;
+				}
+				if(resultHeight < filterHeight)
+				{
+					resultHeight = filterHeight;
+				}
+			}
+			result.setTo(resultX, resultY, resultWidth, resultHeight);
+			return result;
+		}
+
+		/**
+		 * @private
+		 */
 		protected function texture_onRestore():void
 		{
 			this.refreshSnapshot();
@@ -1303,6 +1416,8 @@ package feathers.controls.text
 			var yPosition:Number = 0;
 			var bitmapData:BitmapData;
 			var snapshotIndex:int = -1;
+			var useNativeFilters:Boolean = this._nativeFilters && this._nativeFilters.length > 0 &&
+				totalBitmapWidth <= this._maxTextureDimensions && totalBitmapHeight <= this._maxTextureDimensions;
 			do
 			{
 				var currentBitmapWidth:Number = totalBitmapWidth;
@@ -1334,6 +1449,33 @@ package feathers.controls.text
 					HELPER_MATRIX.ty = -yPosition;
 					HELPER_RECTANGLE.setTo(0, 0, clipWidth, clipHeight);
 					bitmapData.draw(this._textLineContainer, HELPER_MATRIX, null, null, HELPER_RECTANGLE);
+					if(useNativeFilters)
+					{
+						this.measureNativeFilters(bitmapData, HELPER_RECTANGLE);
+						if(bitmapData.rect.equals(HELPER_RECTANGLE))
+						{
+							this._textSnapshotOffsetX = 0;
+							this._textSnapshotOffsetY = 0;
+						}
+						else
+						{
+							HELPER_MATRIX.tx -= HELPER_RECTANGLE.x;
+							HELPER_MATRIX.ty -= HELPER_RECTANGLE.y;
+							var newBitmapData:BitmapData = new BitmapData(HELPER_RECTANGLE.width, HELPER_RECTANGLE.height, true, 0x00ff00ff);
+							this._textSnapshotOffsetX = HELPER_RECTANGLE.x;
+							this._textSnapshotOffsetY = HELPER_RECTANGLE.y;
+							HELPER_RECTANGLE.x = 0;
+							HELPER_RECTANGLE.y = 0;
+							newBitmapData.draw(this._textLineContainer, HELPER_MATRIX, null, null, HELPER_RECTANGLE);
+							bitmapData.dispose();
+							bitmapData = newBitmapData;
+						}
+					}
+					else
+					{
+						this._textSnapshotOffsetX = 0;
+						this._textSnapshotOffsetY = 0;
+					}
 					var newTexture:Texture;
 					if(!this.textSnapshot || this._needsNewTexture)
 					{
@@ -1421,37 +1563,6 @@ package feathers.controls.text
 				}
 			}
 			this._needsNewTexture = false;
-		}
-
-		/**
-		 * @private
-		 */
-		protected function disposeContent():void
-		{
-			if(this.textSnapshot)
-			{
-				this.textSnapshot.texture.dispose();
-				this.removeChild(this.textSnapshot, true);
-				this.textSnapshot = null;
-			}
-			if(this.textSnapshots)
-			{
-				var snapshotCount:int = this.textSnapshots.length;
-				for(var i:int = 0; i < snapshotCount; i++)
-				{
-					var snapshot:Image = this.textSnapshots[i];
-					snapshot.texture.dispose();
-					this.removeChild(snapshot, true);
-				}
-				this.textSnapshots = null;
-			}
-
-			this._previousContentWidth = NaN;
-			this._previousContentHeight = NaN;
-
-			this._needsNewTexture = false;
-			this._snapshotWidth = 0;
-			this._snapshotHeight = 0;
 		}
 
 		/**
@@ -1613,25 +1724,6 @@ package feathers.controls.text
 				textLineParent.removeChild(line);
 			}
 			HELPER_TEXT_LINES.length = 0;
-		}
-
-		/**
-		 * @private
-		 */
-		protected function addedToStageHandler(event:Event):void
-		{
-			//we need to invalidate in order to get a fresh snapshot
-			this.invalidate(INVALIDATION_FLAG_SIZE);
-		}
-
-		/**
-		 * @private
-		 */
-		protected function removedFromStageHandler(event:Event):void
-		{
-			//avoid the need to call dispose(). we'll create a new snapshot
-			//when the renderer is added to stage again.
-			this.disposeContent();
 		}
 	}
 }

@@ -10,6 +10,7 @@ package feathers.controls
 	import feathers.core.FeathersControl;
 	import feathers.core.IFocusDisplayObject;
 	import feathers.core.PropertyProxy;
+	import feathers.events.ExclusiveTouch;
 	import feathers.events.FeathersEventType;
 	import feathers.skins.IStyleProvider;
 	import feathers.utils.math.clamp;
@@ -18,6 +19,8 @@ package feathers.controls
 	import flash.events.TimerEvent;
 	import flash.ui.Keyboard;
 	import flash.utils.Timer;
+
+	import starling.display.DisplayObject;
 
 	import starling.events.Event;
 	import starling.events.KeyboardEvent;
@@ -291,7 +294,7 @@ package feathers.controls
 		{
 			if(this._step != 0 && newValue != this._maximum && newValue != this._minimum)
 			{
-				newValue = roundToNearest(newValue, this._step);
+				newValue = roundToNearest(newValue - this._minimum, this._step) + this._minimum;
 			}
 			newValue = clamp(newValue, this._minimum, this._maximum);
 			if(this._value == newValue)
@@ -1197,8 +1200,8 @@ package feathers.controls
 		 */
 		protected function autoSizeIfNeeded():Boolean
 		{
-			var needsWidth:Boolean = isNaN(this.explicitWidth);
-			var needsHeight:Boolean = isNaN(this.explicitHeight);
+			var needsWidth:Boolean = this.explicitWidth != this.explicitWidth; //isNaN
+			var needsHeight:Boolean = this.explicitHeight != this.explicitHeight; //isNaN
 			if(!needsWidth && !needsHeight)
 			{
 				return false;
@@ -1275,6 +1278,11 @@ package feathers.controls
 		protected function decrement():void
 		{
 			this.value -= this._step;
+			if(this.textInput.isEditable)
+			{
+				this.validate();
+				this.textInput.selectRange(0, this.textInput.text.length);
+			}
 		}
 
 		/**
@@ -1283,6 +1291,37 @@ package feathers.controls
 		protected function increment():void
 		{
 			this.value += this._step;
+			if(this.textInput.isEditable)
+			{
+				this.validate();
+				this.textInput.selectRange(0, this.textInput.text.length);
+			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function toMinimum():void
+		{
+			this.value = this._minimum;
+			if(this.textInput.isEditable)
+			{
+				this.validate();
+				this.textInput.selectRange(0, this.textInput.text.length);
+			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function toMaximum():void
+		{
+			this.value = this._maximum;
+			if(this.textInput.isEditable)
+			{
+				this.validate();
+				this.textInput.selectRange(0, this.textInput.text.length);
+			}
 		}
 
 		/**
@@ -1412,10 +1451,20 @@ package feathers.controls
 		protected function refreshTypicalText():void
 		{
 			var typicalText:String = "";
-			var characterCount:int = Math.max(this._minimum.toString().length, this._maximum.toString().length);
+			var maxCharactersBeforeDecimal:Number = Math.max(int(this._minimum).toString().length, int(this._maximum).toString().length, int(this._step).toString().length);
+			var maxCharactersAfterDecimal:Number = Math.max((this._minimum - int(this._minimum)).toString().length, (this._maximum - int(this._maximum)).toString().length, (this._step - int(this._step)).toString().length) - 2;
+			if(maxCharactersAfterDecimal < 0)
+			{
+				maxCharactersAfterDecimal = 0;
+			}
+			var characterCount:int = maxCharactersBeforeDecimal + maxCharactersAfterDecimal;
 			for(var i:int = 0; i < characterCount; i++)
 			{
 				typicalText += "0";
+			}
+			if(maxCharactersAfterDecimal > 0)
+			{
+				typicalText += ".";
 			}
 			this.textInput.typicalText = typicalText;
 		}
@@ -1489,6 +1538,23 @@ package feathers.controls
 		 */
 		protected function startRepeatTimer(action:Function):void
 		{
+			if(this.touchPointID >= 0)
+			{
+				var exclusiveTouch:ExclusiveTouch = ExclusiveTouch.forStage(this.stage);
+				var claim:DisplayObject = exclusiveTouch.getClaim(this.touchPointID)
+				if(claim != this)
+				{
+					if(claim)
+					{
+						//already claimed by another display object
+						return;
+					}
+					else
+					{
+						exclusiveTouch.claimTouch(this.touchPointID, this);
+					}
+				}
+			}
 			this.currentRepeatAction = action;
 			if(this._repeatDelay > 0)
 			{
@@ -1503,6 +1569,26 @@ package feathers.controls
 					this._repeatTimer.delay = this._repeatDelay * 1000;
 				}
 				this._repeatTimer.start();
+			}
+		}
+
+		/**
+		 * @private
+		 */
+		protected function parseTextInputValue():void
+		{
+			var newValue:Number = parseFloat(this.textInput.text);
+			if(newValue == newValue) //!isNaN
+			{
+				this.value = newValue;
+				if(this.value != newValue && !this.isInvalid(INVALIDATION_FLAG_DATA))
+				{
+					//if the value setter modified the new value from the text
+					//input, and it returned because the modified value is equal
+					//to the current value, then we need to force invalidation
+					//so that the text input's text is accurate
+					this.invalidate(INVALIDATION_FLAG_DATA);
+				}
 			}
 		}
 
@@ -1551,11 +1637,7 @@ package feathers.controls
 		 */
 		protected function textInput_enterHandler(event:Event):void
 		{
-			var newValue:Number = parseFloat(this.textInput.text);
-			if(!isNaN(newValue))
-			{
-				this.value = newValue;
-			}
+			this.parseTextInputValue();
 		}
 
 		/**
@@ -1563,11 +1645,7 @@ package feathers.controls
 		 */
 		protected function textInput_focusOutHandler(event:Event):void
 		{
-			var newValue:Number = parseFloat(this.textInput.text);
-			if(!isNaN(newValue))
-			{
-				this.value = newValue;
-			}
+			this.parseTextInputValue();
 		}
 
 		/**
@@ -1649,19 +1727,19 @@ package feathers.controls
 		{
 			if(event.keyCode == Keyboard.HOME)
 			{
-				this.value = this._minimum;
+				this.toMinimum();
 			}
 			else if(event.keyCode == Keyboard.END)
 			{
-				this.value = this._maximum;
+				this.toMaximum();
 			}
 			else if(event.keyCode == Keyboard.UP)
 			{
-				this.value += this._step;
+				this.increment();
 			}
 			else if(event.keyCode == Keyboard.DOWN)
 			{
-				this.value -= this._step;
+				this.decrement();
 			}
 		}
 

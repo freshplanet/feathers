@@ -704,8 +704,8 @@ package feathers.controls.renderers
 		 * A function that generates an <code>ImageLoader</code> that uses the result
 		 * of <code>contentSourceField</code> or <code>contentSourceFunction</code>.
 		 * Useful for transforming the <code>ImageLoader</code> in some way. For
-		 * example, you might want to scale it for current DPI or apply pixel
-		 * snapping.
+		 * example, you might want to scale it for current screen density or
+		 * apply pixel snapping.
 		 *
 		 * <p>In the following example, a custom content loader factory is passed
 		 * to the renderer:</p>
@@ -1330,17 +1330,19 @@ package feathers.controls.renderers
 			if(needsWidth)
 			{
 				newWidth = this.content.width + this._paddingLeft + this._paddingRight;
-				if(this.originalBackgroundWidth == this.originalBackgroundWidth) //!isNaN
+				if(this.originalBackgroundWidth == this.originalBackgroundWidth && //!isNaN
+					this.originalBackgroundWidth > newWidth)
 				{
-					newWidth = Math.max(newWidth, this.originalBackgroundWidth);
+					newWidth = this.originalBackgroundWidth;
 				}
 			}
 			if(needsHeight)
 			{
 				newHeight = this.content.height + this._paddingTop + this._paddingBottom;
-				if(this.originalBackgroundHeight == this.originalBackgroundHeight) //!isNaN
+				if(this.originalBackgroundHeight == this.originalBackgroundHeight && //!isNaN
+					this.originalBackgroundHeight > newHeight)
 				{
-					newHeight = Math.max(newHeight, this.originalBackgroundHeight);
+					newHeight = this.originalBackgroundHeight;
 				}
 			}
 			return this.setSizeInternal(newWidth, newHeight, false);
