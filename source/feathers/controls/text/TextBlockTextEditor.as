@@ -7,12 +7,6 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.text
 {
-	import feathers.core.FocusManager;
-	import feathers.core.ITextEditor;
-	import feathers.events.FeathersEventType;
-	import feathers.utils.text.TextInputNavigation;
-	import feathers.utils.text.TextInputRestrict;
-
 	import flash.desktop.Clipboard;
 	import flash.desktop.ClipboardFormats;
 	import flash.display.InteractiveObject;
@@ -20,10 +14,17 @@ package feathers.controls.text
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.text.TextField;
 	import flash.text.engine.TextLine;
 	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
-
+	
+	import feathers.core.FocusManager;
+	import feathers.core.ITextEditor;
+	import feathers.events.FeathersEventType;
+	import feathers.utils.text.TextInputNavigation;
+	import feathers.utils.text.TextInputRestrict;
+	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
@@ -1232,5 +1233,7 @@ package feathers.controls.text
 			}
 			this.replaceSelectedText(pastedText);
 		}
+		
+		public function get measureTextField():TextField{return null;}
 	}
 }
